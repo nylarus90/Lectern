@@ -49,6 +49,7 @@ ignore = [
     "N815",    # Qt signals are camelCase by convention
     "UP031",   # this codebase uses %-formatting consistently
     "UP035",   # typing.Callable is still correct and reads better here
+    "SIM905",  # a wrapped sentence beats a 66-item word list
 ]
 
 [tool.ruff.lint.per-file-ignores]

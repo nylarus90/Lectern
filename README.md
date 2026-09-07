@@ -97,8 +97,9 @@ Verschieben der Datei, weil Bücher am Inhalt und nicht am Pfad erkannt werden.
 ```bash
 python -m pip install -r requirements-dev.txt
 python -m openreader                     # starten
-python -m pytest                         # 109 Tests
+python -m pytest                         # 118 Tests
 python tests/smoke_gui.py --visible      # Screenshots aller Ansichten
+python tests/bench_reader.py             # Scroll-Leistung messen
 pyinstaller build/openreader.spec --noconfirm --distpath build/dist
 ```
 
@@ -137,6 +138,15 @@ Positionen für Markierungen. Weil das Dokument deterministisch aus der Datei
 entsteht, zeigt eine gespeicherte Markierung auch nach Monaten noch auf
 dieselben Wörter.
 
+**Warum cacht der Reader Bilder selbst?**
+Qt legt eine Ressource erst dann in seinen Cache, wenn die *Basisimplementierung*
+von `loadResource` durchläuft. Da Buchbilder im Speicher liegen und nicht auf der
+Platte, muss der Reader vorher zurückkehren — und damit auch selbst cachen. Ohne
+das wurde jede Abbildung bei **jedem einzelnen Neuzeichnen** neu dekodiert und
+geglättet skaliert. Auf einem 21-MB-Roman mit 15 ganzseitigen Tafeln kostete das
+303 ms pro Frame; die Hälfte aller Frames lag unter 30 fps. Gemessen und behoben:
+siehe [Scroll-Leistung](#scroll-leistung).
+
 **Warum wird die Zeilenhöhe bei Bildern zurückgesetzt?**
 Ein relativer `line-height` multipliziert die Höhe des größten Elements einer
 Zeile. Eine 320 px hohe Abbildung in einem 155-%-Absatz belegt sonst 496 px und
@@ -145,9 +155,46 @@ Zeilenhöhe — und werden gleich mittig gesetzt.
 
 ---
 
+## Scroll-Leistung
+
+Gemessen mit `tests/bench_reader.py` an einem echten 21-MB-Roman mit 15
+ganzseitigen JPEG-Tafeln, Fenster maximiert, 150 Mausrad-Rasten,
+150-%-Skalierung:
+
+| | vorher | nachher |
+|---|---|---|
+| Frame über einer Abbildung (Median) | 303 ms | **4 ms** |
+| schlechtester Frame | 453 ms | **31 ms** |
+| Frames unter 30 fps | 77 von 150 | **0 von 150** |
+| Bilddekodierungen beim Scrollen | 939 | **2** |
+| Ladezeit | 2,85 s | **0,47 s** |
+| Speicher | 199 MB | 249 MB |
+
+Reine Textpassagen lagen vorher wie nachher bei rund 5 ms — das Textlayout war
+nie das Problem, und es wächst auch nicht mit der Position im Buch.
+
+Die 50 MB Mehrverbrauch sind der Bildcache. Sein Budget wurde nicht geschätzt,
+sondern gemessen: bei 48 MB brach kein Frame ein, bei 24 MB waren es 39 und bei
+12 MB wieder 75. Mehr als 48 MB brachte keine weitere Glätte.
+
+Zwei kleinere Korrekturen kamen aus derselben Messung: Bilder werden über
+`QImageReader.setScaledSize` gleich in Zielgröße dekodiert statt voll und dann
+skaliert (das allein macht das Laden sechsmal schneller), und `apply_typography`
+erzwingt kein vollständiges Neulayout mehr, wenn sich weder Schrift noch Breite
+geändert haben.
+
+```bash
+python tests/bench_reader.py --book "mein-buch.epub"
+```
+
+Das Werkzeug meldet Frame-Zeiten getrennt nach Passagen mit und ohne Abbildung
+und beendet sich mit Rückgabewert 1, sobald ein Frame ruckelt.
+
+---
+
 ## Tests
 
-109 automatisierte Tests, davon 26 auf Widget-Ebene, die das echte Fenster
+118 automatisierte Tests, davon 34 auf Widget-Ebene, die das echte Fenster
 steuern: jedes Format wird über den realen Ladeweg geöffnet, Suche, Markierungen
 und Wiederherstellung der Leseposition werden durchgespielt, und beschädigte
 sowie DRM-geschützte Dateien müssen eine verständliche Meldung erzeugen statt

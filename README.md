@@ -179,11 +179,17 @@ Notizen — in `library.sqlite3` und `settings.json`:
 | macOS | `~/Library/Application Support/openreader` |
 | Linux | `$XDG_DATA_HOME/openreader` bzw. `~/.local/share/openreader` |
 
-Verzeichnis und Dateien werden auf Unix-Systemen nur für das eigene Konto
-lesbar angelegt (`0700` bzw. `0600`). Verschlüsselt sind sie nicht — wer das
-braucht, legt sie per `--data-dir` auf einen verschlüsselten Datenträger.
-**Datei → Zuletzt geöffnet → Liste leeren** löscht den gesamten Verlauf
-einschließlich Lesezeichen und Notizen.
+Das Verzeichnis gehört dem eigenen Konto: unter Linux und macOS mit `0700`
+beziehungsweise `0600` für die Dateien, unter Windows über eine ACL, die nur
+den Eigentümer und SYSTEM einträgt. Das ist vor allem für den portablen Modus
+wichtig — ein Datenordner in einem freigegebenen Verzeichnis würde dessen
+Rechte sonst erben. Auf Dateisystemen ganz ohne Rechteverwaltung, etwa einem
+FAT-formatierten USB-Stick, lässt sich nichts durchsetzen; dort liegen die
+Daten offen.
+
+**Verschlüsselt sind sie nicht.** Wer das braucht, legt sie per `--data-dir`
+auf einen verschlüsselten Datenträger. **Datei → Zuletzt geöffnet → Liste
+leeren** löscht den gesamten Verlauf einschließlich Lesezeichen und Notizen.
 
 ---
 

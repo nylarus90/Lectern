@@ -297,14 +297,91 @@ class TestStorageFailureIsVisible:
 
 
 # -- F-08: the data directory belongs to its owner alone --------------------
-@pytest.mark.skipif(os.name == "nt", reason="POSIX permissions do not apply on Windows")
-def test_data_directory_is_private(tmp_path, monkeypatch):
-    from openreader.storage import paths
+class TestDataDirectoryIsPrivate:
+    @pytest.mark.skipif(os.name == "nt", reason="POSIX-Rechte gelten unter Windows nicht")
+    def test_posix_permissions(self, tmp_path, monkeypatch):
+        from openreader.storage import paths
 
-    target = tmp_path / "daten"
-    monkeypatch.setenv("OPENREADER_DATA_DIR", str(target))
-    created = paths.data_dir()
-    assert oct(os.stat(created).st_mode & 0o777) == "0o700"
+        monkeypatch.setenv("OPENREADER_DATA_DIR", str(tmp_path / "daten"))
+        created = paths.data_dir()
+        assert oct(os.stat(created).st_mode & 0o777) == "0o700"
+
+    @pytest.mark.skipif(os.name == "nt", reason="POSIX-Rechte gelten unter Windows nicht")
+    def test_posix_files(self, tmp_path, monkeypatch):
+        from openreader.storage.db import Library
+        from openreader.storage.settings import Settings
+
+        monkeypatch.setenv("OPENREADER_DATA_DIR", str(tmp_path / "daten"))
+        library = Library()
+        settings = Settings()
+        settings.save()
+        for path in (library.path, settings.path):
+            assert oct(os.stat(path).st_mode & 0o777) == "0o600", path
+        library.close()
+
+    @pytest.mark.skipif(os.name != "nt", reason="ACL-Prüfung nur unter Windows")
+    def test_windows_directory_is_not_readable_by_other_users(self, tmp_path, monkeypatch):
+        """A portable directory must not inherit a shared parent's permissions.
+
+        Measured: a plain ``mkdir`` inside a folder granting ``Users`` full
+        control inherits that grant.  CPython 3.13 turns ``mode=0o700`` into the
+        right descriptor, but 3.10 to 3.12 ignore the mode on Windows, so the
+        reader tightens the directory itself.
+        """
+
+        import subprocess
+
+        parent = tmp_path / "geteilt"
+        parent.mkdir()
+        # Grant the built-in Users group, by SID so the test is language-neutral.
+        subprocess.run(
+            ["icacls", str(parent), "/grant", "*S-1-5-32-545:(OI)(CI)F"],
+            capture_output=True, check=False, timeout=30,
+        )
+        target = parent / "openreader-data"
+        target.mkdir()                       # exists already, with open rights
+
+        from openreader.storage import paths
+
+        monkeypatch.setenv("OPENREADER_DATA_DIR", str(target))
+        paths.data_dir()
+
+        listing = subprocess.run(
+            ["icacls", str(target)], capture_output=True, check=False, timeout=30,
+        ).stdout.decode("utf-8", "replace")
+        assert "S-1-5-32-545" not in listing and "Users:" not in listing, listing
+        assert (target / paths._SECURED_MARKER).exists()
+
+    @pytest.mark.skipif(os.name != "nt", reason="ACL-Prüfung nur unter Windows")
+    def test_windows_hardening_runs_once(self, tmp_path, monkeypatch):
+        """The marker keeps a subprocess off the startup path of every launch."""
+
+        from openreader.storage import paths
+
+        calls = {"n": 0}
+        real_run = paths.subprocess.run
+
+        def counting(*args, **kwargs):
+            calls["n"] += 1
+            return real_run(*args, **kwargs)
+
+        monkeypatch.setattr(paths.subprocess, "run", counting)
+        monkeypatch.setenv("OPENREADER_DATA_DIR", str(tmp_path / "daten"))
+        paths.data_dir()
+        first = calls["n"]
+        paths.data_dir()
+        paths.data_dir()
+        assert first >= 1
+        assert calls["n"] == first, "die Rechte werden bei jedem Start neu gesetzt"
+
+    def test_a_read_only_location_does_not_break_startup(self, tmp_path, monkeypatch):
+        """A stick without permissions is a normal home for a portable library."""
+
+        from openreader.storage import paths
+
+        monkeypatch.setenv("OPENREADER_DATA_DIR", str(tmp_path / "daten"))
+        monkeypatch.setattr(paths.subprocess, "run", _raise_oserror)
+        assert paths.data_dir()              # must not raise
 
 
 # -- F-16: the image cache must honour its budget ---------------------------
@@ -364,3 +441,7 @@ def test_cancelling_a_running_load_does_not_crash():
         % (result.returncode, result.returncode & 0xFFFFFFFF,
            result.stdout.decode("utf-8", "replace")[-800:])
     )
+
+
+def _raise_oserror(*_args, **_kwargs):
+    raise OSError("icacls fehlt")

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+import xml.etree.ElementTree as ET
 from dataclasses import dataclass, field
 from enum import Enum
 from typing import Callable, Iterable
@@ -135,9 +136,101 @@ def file_id(path: str) -> str:
     return digest.hexdigest()
 
 
+#: Upper bound on how much a single book may expand to in memory.  A 40 MB
+#: archive of nothing but zeroes decompresses to about 40 GB, so without a
+#: ceiling a merely damaged — let alone deliberately crafted — file drives the
+#: machine into swap.  The limit is generous: the largest real illustrated books
+#: measured here stay under 200 MB.
+MAX_UNCOMPRESSED_BYTES = 512 * 1024 * 1024
+
+
+class ExpansionBudget:
+    """Caps how much uncompressed data one book may produce.
+
+    Declared sizes in archive headers are attacker-controlled and may lie, so
+    entries are checked twice: against the declared size before reading, and
+    against reality afterwards.
+    """
+
+    def __init__(self, limit: int = MAX_UNCOMPRESSED_BYTES) -> None:
+        self.limit = limit
+        self.used = 0
+
+    def _fail(self, what: str) -> None:
+        raise LoadError(
+            "Die Datei entpackt sich auf mehr als %d MB und wurde deshalb "
+            "abgelehnt (bei: %s).\n\nDas deutet auf eine beschädigte oder "
+            "absichtlich präparierte Datei hin." % (self.limit // (1024 * 1024), what)
+        )
+
+    def check(self, declared: int, what: str) -> None:
+        """Reject an entry before reading it, based on its declared size."""
+
+        if declared < 0 or self.used + declared > self.limit:
+            self._fail(what)
+
+    def spend(self, actual: int, what: str) -> None:
+        """Account for data actually read, in case the declared size lied."""
+
+        self.used += actual
+        if self.used > self.limit:
+            self._fail(what)
+
+    def read_zip(self, archive, name: str) -> bytes:
+        """Read one ZIP entry within budget."""
+
+        self.check(archive.getinfo(name).file_size, name)
+        data = archive.read(name)
+        self.spend(len(data), name)
+        return data
+
+
 #: Signature of a loader: ``(path, progress) -> Book``.
 Loader = Callable[[str, Callable[[int, str], None]], Book]
 
 
 def noop_progress(percent: int, message: str) -> None:  # pragma: no cover - trivial
     pass
+
+
+def _doctype_span(data: bytes) -> bytes:
+    """The document's DOCTYPE declaration, internal subset included.
+
+    Entity declarations can only live here, so this is the only region that has
+    to be examined — scanning the whole file would flag the words in ordinary
+    prose or in a code sample.
+    """
+
+    start = data.find(b"<!DOCTYPE")
+    if start < 0:
+        start = data.find(b"<!doctype")
+    if start < 0:
+        return b""
+    subset_start = data.find(b"[", start)
+    end = data.find(b">", start)
+    if subset_start >= 0 and (end < 0 or subset_start < end):
+        subset_end = data.find(b"]", subset_start)
+        end = data.find(b">", subset_end) if subset_end >= 0 else -1
+    return data[start:end + 1] if end > start else data[start:]
+
+
+def parse_xml(data: bytes | str) -> ET.Element:
+    """Parse book XML, refusing documents that declare entities.
+
+    EPUB and FB2 are XML, and a few hundred bytes of nested entity definitions
+    expand to gigabytes on a parser that allows them.  libexpat 2.6 caps the
+    amplification factor, but the supported Python versions do not all ship it,
+    and a system interpreter can be new while its libexpat is old — so the
+    protection cannot be assumed.  Books have no legitimate use for entity
+    declarations, and refusing them also closes external entity references
+    (XXE), on every version.
+    """
+
+    raw = data.encode("utf-8", "replace") if isinstance(data, str) else data
+    if b"<!ENTITY" in _doctype_span(raw).upper():
+        raise LoadError(
+            "Die Datei enthält XML-Entity-Definitionen und wurde abgelehnt. "
+            "Bücher brauchen diese nicht; sie dienen fast immer dazu, den "
+            "Arbeitsspeicher des Lesegeräts zu erschöpfen."
+        )
+    return ET.fromstring(data)

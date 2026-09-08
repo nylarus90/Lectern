@@ -3,8 +3,10 @@
 Positions are character offsets into the assembled document.  Because the
 document is built deterministically from the file, the same book always yields
 the same offsets, so a note keeps pointing at the same words across sessions.
-Every annotation also stores the text it covered, which lets the UI verify -- and
-if necessary re-find -- its anchor after the loader changes.
+
+Every annotation also stores the text it covered.  That excerpt is what the
+annotation list displays and what the Markdown export contains; it is not yet
+used to re-find an anchor should a change to the loaders shift the offsets.
 """
 
 from __future__ import annotations
@@ -13,7 +15,7 @@ import sqlite3
 import time
 from dataclasses import dataclass, field
 
-from .paths import database_path
+from .paths import database_path, secure_file
 
 SCHEMA_VERSION = 1
 
@@ -101,7 +103,13 @@ class Library:
 
     def __init__(self, path: str | None = None) -> None:
         self.path = path or database_path()
-        self.connection = sqlite3.connect(self.path)
+        #: Set once a write has failed, so the window can say so exactly once
+        #: instead of losing the reading position without a word.
+        self.degraded = False
+        # A second instance — portable and installed side by side — shares this
+        # file.  Without a timeout the loser of a race raises immediately.
+        self.connection = sqlite3.connect(self.path, timeout=5.0)
+        secure_file(self.path)
         self.connection.row_factory = sqlite3.Row
         self.connection.execute("PRAGMA foreign_keys = ON")
         self.connection.execute("PRAGMA journal_mode = WAL")
@@ -157,12 +165,25 @@ class Library:
         self.connection.commit()
 
     # -- reading position -------------------------------------------------
-    def save_position(self, ident: str, position: int, total: int) -> None:
-        self.connection.execute(
-            "UPDATE books SET position = ?, total = ?, last_opened = ? WHERE id = ?",
-            (int(position), int(total), time.time(), ident),
-        )
-        self.connection.commit()
+    def save_position(self, ident: str, position: int, total: int) -> bool:
+        """Store the reading position; ``False`` means it could not be saved.
+
+        This runs on a timer, so a locked or read-only database used to raise
+        from inside Qt's event loop, where the traceback went to a console the
+        windowed build does not have.  The reader silently stopped remembering
+        where you were.
+        """
+
+        try:
+            self.connection.execute(
+                "UPDATE books SET position = ?, total = ?, last_opened = ? WHERE id = ?",
+                (int(position), int(total), time.time(), ident),
+            )
+            self.connection.commit()
+        except sqlite3.Error:
+            self.degraded = True
+            return False
+        return True
 
     def state(self, ident: str) -> BookState:
         row = self.connection.execute(

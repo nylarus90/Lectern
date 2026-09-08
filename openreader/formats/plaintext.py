@@ -7,12 +7,13 @@ RTF gets a purpose-built converter for the subset that book files actually use.
 
 from __future__ import annotations
 
+import codecs
 import os
 import re
 from html import escape
 from typing import Callable
 
-from ..render.html_clean import normalize, strip_tags
+from ..render.html_clean import normalize_ex, strip_tags
 from .base import Book, BookKind, Chapter, LoadError, TocEntry, noop_progress
 
 #: Tried in order; the first that decodes without loss and without obvious
@@ -167,10 +168,17 @@ def _finish_html_book(book: Book, html: str, *, base_dir: str, progress) -> Book
     def resolve_src(src: str) -> str:
         if not src or not base_dir or src.startswith(("http://", "https://", "data:")):
             return ""
-        candidate = os.path.normpath(os.path.join(base_dir, src.split("#")[0]))
-        # Never follow a book's relative path outside its own directory.
-        if base_dir and not candidate.startswith(os.path.abspath(base_dir)):
-            return ""
+        candidate = os.path.realpath(os.path.join(base_dir, src.split("#")[0]))
+        # Never follow a book's relative path outside its own directory.  A
+        # plain prefix test would accept a sibling folder whose name merely
+        # starts the same way ("buch" next to "buch_privat"); commonpath
+        # compares whole segments, and realpath closes the symlink route.
+        root = os.path.realpath(base_dir)
+        try:
+            if os.path.commonpath([root, candidate]) != root:
+                return ""
+        except ValueError:
+            return ""       # different drives on Windows
         if candidate in book.resources:
             return candidate
         try:
@@ -196,7 +204,7 @@ def _finish_html_book(book: Book, html: str, *, base_dir: str, progress) -> Book
     parts.append(html[last:])
 
     progress(70, "Text wird aufbereitet…")
-    body, title = normalize(
+    body, title, truncated = normalize_ex(
         "".join(parts),
         anchor_prefix="ch0",
         resolve_href=lambda h: h if h.startswith(("http://", "https://", "mailto:")) else (
@@ -204,6 +212,10 @@ def _finish_html_book(book: Book, html: str, *, base_dir: str, progress) -> Book
         ),
         resolve_src=resolve_src,
     )
+    if truncated:
+        book.warnings.append(
+            "Das Dokument ist unvollständig: ein ausgeblendeter Bereich wurde nie geschlossen."
+        )
     if title:
         book.meta.title = title
     book.chapters = [Chapter(ident="ch0", title=book.meta.title,
@@ -317,10 +329,21 @@ def rtf_to_html(source: str) -> tuple[str, str, str]:
             capture, captured = "author", []
             continue
         if word == "ansicpg" and value:
-            codepage = "cp%d" % value
+            # The number comes from the file and need not name a real codec.
+            candidate = "cp%d" % value
+            try:
+                codecs.lookup(candidate)
+            except LookupError:
+                pass                       # keep the previous, working codepage
+            else:
+                codepage = candidate
             continue
         if word == "u" and value is not None:
-            add_text(chr(value if value >= 0 else value + 65536))
+            # RTF writes code points as signed 16-bit values, but a damaged file
+            # can carry anything; chr() raises outside the Unicode range.
+            point = value + 65536 if value < 0 else value
+            if 0 <= point <= 0x10FFFF:
+                add_text(chr(point))
             pending_unicode_skip = 1  # \uc1 default: one fallback character
             continue
         if word == "uc" and value is not None:

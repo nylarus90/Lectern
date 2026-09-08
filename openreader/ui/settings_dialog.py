@@ -8,6 +8,7 @@ rather than only after pressing OK.
 from __future__ import annotations
 
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
@@ -167,6 +168,8 @@ class SettingsDialog(QDialog):
     def _theme_changed(self, _index: int) -> None:
         key = self.theme_box.currentData()
         self.settings["theme"] = key
+        # Without this the theme only reached the disk when the window closed.
+        self.settingsChanged.emit()
         parent = self.parent()
         if parent is not None and hasattr(parent, "apply_theme"):
             parent.apply_theme(key)
@@ -193,6 +196,11 @@ class SettingsDialog(QDialog):
         self.justify_box.setChecked(DEFAULTS["justify"])
         self.publisher_box.setChecked(DEFAULTS["use_publisher_css"])
         self.theme_box.setCurrentIndex(max(0, self.theme_box.findData(DEFAULTS["theme"])))
+        # The font box was left showing the old family while the setting behind
+        # it had already been reset, so dialog and state disagreed.
+        self.font_box.blockSignals(True)
+        self.font_box.setCurrentFont(QFont())
+        self.font_box.blockSignals(False)
         self.settingsChanged.emit()
 
 

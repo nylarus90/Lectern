@@ -277,6 +277,30 @@ class ReaderView(QTextBrowser):
 
     def scroll_to_anchor(self, anchor: str) -> None:
         self.scrollToAnchor(anchor.lstrip("#"))
+
+    def anchor_positions(self) -> dict[str, int]:
+        """Character position of every anchor Qt kept in the document.
+
+        Qt only records an anchor where it produced a text fragment, so the
+        chapter markers survive while empty ``<a name=...>`` elements inside a
+        chapter often do not.  Callers therefore fall back to the chapter an
+        entry belongs to rather than expecting every id to be present.
+        """
+
+        document = self.document()
+        positions: dict[str, int] = {}
+        if document is None:
+            return positions
+        block = document.begin()
+        while block.isValid():
+            iterator = block.begin()
+            while not iterator.atEnd():
+                fragment = iterator.fragment()
+                for name in fragment.charFormat().anchorNames():
+                    positions.setdefault(name, fragment.position())
+                iterator += 1
+            block = block.next()
+        return positions
         self._emit_position()
 
     def _emit_position(self) -> None:
@@ -478,9 +502,14 @@ class _ImageCache:
         self._entries[key] = image
         self._entries.move_to_end(key)
         self._bytes += size
+        # Evict down to the budget, keeping the entry just inserted: it is the
+        # one being drawn right now, and dropping it would decode it again on
+        # the very next repaint.
         while self._bytes > self.budget and len(self._entries) > 1:
-            _old_key, old = self._entries.popitem(last=False)
-            self._bytes -= max(1, old.sizeInBytes())
+            oldest = next(iter(self._entries))
+            if oldest == key:
+                break
+            self._bytes -= max(1, self._entries.pop(oldest).sizeInBytes())
 
     def clear(self) -> None:
         self._entries.clear()

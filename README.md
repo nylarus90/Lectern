@@ -18,7 +18,7 @@ keine Laufzeitumgebung, kein Browser. Herunterladen, starten, lesen.
 | **Kindle KF8** | `.azw3` `.azw` | Haupt-Flow, `kindle:embed:`-Bilder, kombinierte MOBI/KF8-Dateien |
 | **FictionBook** | `.fb2` `.fb2.zip` `.fbz` | Verschachtelte Abschnitte, Gedichte, Zitate, eingebettete Bilder |
 | **PDF** | `.pdf` | Natives Rendering über Qt PDF, Gliederung, Volltextsuche, Zoom |
-| **Comics** | `.cbz` `.cbt` `.cb7` `.cbr` | Natürliche Seitensortierung, Anpassungsmodi |
+| **Comics** | `.cbz` `.cbt` `.cb7` `.cba` `.cbr` | Natürliche Seitensortierung, Anpassungsmodi |
 | **Text** | `.txt` `.log` | Kodierungserkennung, automatische Kapitelerkennung |
 | **Markdown** | `.md` `.markdown` | CommonMark |
 | **HTML** | `.html` `.htm` `.xhtml` | Mit Bildern aus dem Nachbarordner |
@@ -97,7 +97,7 @@ Verschieben der Datei, weil Bücher am Inhalt und nicht am Pfad erkannt werden.
 ```bash
 python -m pip install -r requirements-dev.txt
 python -m openreader                     # starten
-python -m pytest                         # 118 Tests
+python -m pytest                         # 169 Tests
 python tests/smoke_gui.py --visible      # Screenshots aller Ansichten
 python tests/bench_reader.py             # Scroll-Leistung messen
 python tests/bench_prefetch.py --book X  # Restruckler beziffern
@@ -167,6 +167,24 @@ Zeile. Eine 320 px hohe Abbildung in einem 155-%-Absatz belegt sonst 496 px und
 hinterlässt ein Loch. Blöcke mit Bildern bekommen deshalb nachträglich 100 %
 Zeilenhöhe — und werden gleich mittig gesetzt.
 
+### Welche Daten wo gespeichert werden
+
+OpenReader sendet nichts ins Netz. Lokal gespeichert werden Dateipfad, Titel,
+Autor, Zeitpunkt des Öffnens, Leseposition sowie Lesezeichen, Markierungen und
+Notizen — in `library.sqlite3` und `settings.json`:
+
+| Plattform | Ort |
+|---|---|
+| Windows | `%APPDATA%\openreader` |
+| macOS | `~/Library/Application Support/openreader` |
+| Linux | `$XDG_DATA_HOME/openreader` bzw. `~/.local/share/openreader` |
+
+Verzeichnis und Dateien werden auf Unix-Systemen nur für das eigene Konto
+lesbar angelegt (`0700` bzw. `0600`). Verschlüsselt sind sie nicht — wer das
+braucht, legt sie per `--data-dir` auf einen verschlüsselten Datenträger.
+**Datei → Zuletzt geöffnet → Liste leeren** löscht den gesamten Verlauf
+einschließlich Lesezeichen und Notizen.
+
 ---
 
 ## Scroll-Leistung
@@ -208,7 +226,7 @@ und beendet sich mit Rückgabewert 1, sobald ein Frame ruckelt.
 
 ## Tests
 
-118 automatisierte Tests, davon 34 auf Widget-Ebene, die das echte Fenster
+169 automatisierte Tests, davon 34 auf Widget-Ebene, die das echte Fenster
 steuern: jedes Format wird über den realen Ladeweg geöffnet, Suche, Markierungen
 und Wiederherstellung der Leseposition werden durchgespielt, und beschädigte
 sowie DRM-geschützte Dateien müssen eine verständliche Meldung erzeugen statt

@@ -14,8 +14,19 @@ import zipfile
 from typing import Callable
 from xml.etree import ElementTree as ET
 
-from ..render.html_clean import anchor_name, normalize, strip_tags
-from .base import Book, BookKind, Chapter, DRMError, LoadError, Metadata, TocEntry, noop_progress
+from ..render.html_clean import anchor_name, normalize_ex, strip_tags
+from .base import (
+    Book,
+    BookKind,
+    Chapter,
+    DRMError,
+    ExpansionBudget,
+    LoadError,
+    Metadata,
+    TocEntry,
+    noop_progress,
+    parse_xml,
+)
 
 NS = {
     "opf": "http://www.idpf.org/2007/opf",
@@ -51,7 +62,7 @@ class _Epub:
             raise LoadError("Die Datei ist kein gültiges EPUB-Archiv.") from exc
         self.names = {name.lstrip("/"): name for name in self.zf.namelist()}
 
-    def read(self, path: str) -> bytes:
+    def _resolve(self, path: str) -> str:
         real = self.names.get(_norm(path))
         if real is None:
             # Some tools write percent-encoded entries, others do not.
@@ -60,10 +71,21 @@ class _Epub:
             real = self.names.get(_norm(unquote(path)))
         if real is None:
             raise KeyError(path)
-        return self.zf.read(real)
+        return real
+
+    def read(self, path: str) -> bytes:
+        return self.zf.read(self._resolve(path))
+
+    def getinfo(self, path: str) -> zipfile.ZipInfo:
+        """Entry metadata under the same lenient name matching as :meth:`read`.
+
+        Lets an :class:`ExpansionBudget` weigh an entry before reading it.
+        """
+
+        return self.zf.getinfo(self._resolve(path))
 
     def xml(self, path: str) -> ET.Element:
-        return ET.fromstring(self.read(path))
+        return parse_xml(self.read(path))
 
 
 def _opf_path(epub: _Epub) -> str:
@@ -77,19 +99,49 @@ def _opf_path(epub: _Epub) -> str:
     raise LoadError("Im EPUB ist kein OPF-Dokument eingetragen.")
 
 
+#: The two font-obfuscation algorithms.  Both scramble an embedded typeface so
+#: it cannot be lifted out of the book; neither restricts reading, so both are
+#: fine to ignore.  Anything else in an encryption manifest is real DRM.
+FONT_OBFUSCATION = frozenset({
+    "http://www.idpf.org/2008/embedding",
+    "http://ns.adobe.com/pdf/enc#RC",
+})
+
+
 def _check_drm(epub: _Epub) -> None:
+    """Reject encrypted books, but not merely obfuscated fonts.
+
+    Judged per entry rather than by searching the file for a keyword.  Adobe
+    protected books routinely carry *both* — obfuscated fonts and encrypted
+    chapters — so a single mention of the font algorithm anywhere used to
+    disable the whole check and the book then rendered as garbage.
+    """
+
     if "META-INF/encryption.xml" not in epub.names:
         return
-    data = epub.read("META-INF/encryption.xml").decode("utf-8", "replace")
-    # Font obfuscation is legitimate and harmless; content encryption is DRM.
-    obfuscated_fonts_only = (
-        "embedding" in data.lower()
-        or "http://www.idpf.org/2008/embedding" in data
-    )
-    if "EncryptedData" in data and not obfuscated_fonts_only:
-        raise DRMError(
-            "Dieses EPUB ist mit DRM geschützt und kann nicht geöffnet werden."
-        )
+    raw = epub.read("META-INF/encryption.xml")
+    try:
+        root = parse_xml(raw)
+    except ET.ParseError:
+        # Unreadable manifest: assume the worst rather than show mojibake.
+        if b"EncryptedData" in raw:
+            raise DRMError(
+                "Dieses EPUB ist verschlüsselt und kann nicht geöffnet werden."
+            ) from None
+        return
+
+    for node in root.iter():
+        if _local(node.tag) != "EncryptedData":
+            continue
+        algorithm = ""
+        for child in node.iter():
+            if _local(child.tag) == "EncryptionMethod":
+                algorithm = (child.get("Algorithm") or "").strip()
+                break
+        if algorithm not in FONT_OBFUSCATION:
+            raise DRMError(
+                "Dieses EPUB ist mit DRM geschützt und kann nicht geöffnet werden."
+            )
 
 
 def _metadata(package: ET.Element) -> tuple[Metadata, str]:
@@ -277,6 +329,7 @@ def load(path: str, progress: Callable[[int, str], None] = noop_progress) -> Boo
 
     # -- resources -------------------------------------------------------
     progress(10, "Ressourcen werden gelesen…")
+    budget = ExpansionBudget()
     for _ident, (href, media, _props) in manifest.items():
         if media in TEXT_MEDIA or media == "application/x-dtbncx+xml":
             continue
@@ -286,14 +339,16 @@ def load(path: str, progress: Callable[[int, str], None] = noop_progress) -> Boo
             "application/x-font-ttf",
         ):
             try:
-                book.resources[href] = epub.read(href)
+                book.resources[href] = budget.read_zip(epub, href)
             except KeyError:
                 book.warnings.append("Fehlende Ressource: %s" % href)
         elif media == "text/css":
             # A stylesheet the manifest promises but the archive lacks is
             # cosmetic only, so it does not deserve a warning.
             with contextlib.suppress(KeyError):
-                book.publisher_css += epub.read(href).decode("utf-8", "replace") + "\n"
+                book.publisher_css += (
+                    budget.read_zip(epub, href).decode("utf-8", "replace") + "\n"
+                )
 
     # -- chapters --------------------------------------------------------
     total = len(spine_ids)
@@ -302,17 +357,22 @@ def load(path: str, progress: Callable[[int, str], None] = noop_progress) -> Boo
         base_dir = posixpath.dirname(href)
         progress(15 + int(70 * index / max(1, total)), "Kapitel %d/%d" % (index + 1, total))
         try:
-            raw = epub.read(href).decode("utf-8", "replace")
+            raw = budget.read_zip(epub, href).decode("utf-8", "replace")
         except KeyError:
             book.warnings.append("Kapitel fehlt im Archiv: %s" % href)
             continue
 
-        body, title = normalize(
+        body, title, truncated = normalize_ex(
             raw,
             anchor_prefix="ch%d" % index,
             resolve_href=lambda h, d=base_dir: _external_or(h, d, resolve_target),
             resolve_src=lambda s, d=base_dir: _resource_key(s, d, book),
         )
+        if truncated:
+            book.warnings.append(
+                "Kapitel unvollständig, ein ausgeblendeter Bereich wurde nie "
+                "geschlossen: %s" % href
+            )
         book.chapters.append(Chapter(ident="ch%d" % index, title=title, html=body))
 
     if not book.chapters:

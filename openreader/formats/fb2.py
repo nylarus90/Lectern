@@ -14,7 +14,16 @@ from html import escape
 from typing import Callable
 from xml.etree import ElementTree as ET
 
-from .base import Book, BookKind, Chapter, LoadError, Metadata, TocEntry, noop_progress
+from .base import (
+    Book,
+    BookKind,
+    Chapter,
+    LoadError,
+    Metadata,
+    TocEntry,
+    noop_progress,
+    parse_xml,
+)
 
 #: FB2 element -> (open tag, close tag).  Anything not listed is passed through
 #: as a transparent container so no text is ever lost.
@@ -198,7 +207,7 @@ def load(path: str, progress: Callable[[int, str], None] = noop_progress) -> Boo
     progress(5, "FB2 wird gelesen…")
     data = _read_bytes(path)
     try:
-        root = ET.fromstring(data)
+        root = parse_xml(data)
     except ET.ParseError as exc:
         raise LoadError("Die FB2-Datei ist kein gültiges XML: %s" % exc) from exc
 

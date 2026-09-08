@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import bisect
 import os
 
 from PySide6.QtCore import QByteArray, Qt, QTimer, QUrl, Signal
@@ -12,6 +13,7 @@ from PySide6.QtWidgets import (
     QFileDialog,
     QInputDialog,
     QLabel,
+    QLineEdit,
     QMainWindow,
     QMenu,
     QMessageBox,
@@ -25,7 +27,7 @@ from .. import formats
 from ..formats.base import Book, BookKind, LoadError, file_id
 from ..render import theme as theming
 from ..storage.db import Library
-from ..storage.settings import Settings
+from ..storage.settings import DEFAULTS, Settings
 from ..version import APP_NAME, __version__
 from .comic_view import ComicView
 from .loader import BookLoader
@@ -50,6 +52,12 @@ class MainWindow(QMainWindow):
         self._search_matches: list[tuple[int, int]] = []
         self._search_index = -1
         self._restoring_position = 0
+        #: (character position, TOC target) pairs, sorted, so the outline can
+        #: follow along while reading.  Empty for page-based views.
+        self._toc_positions: list[tuple[int, object]] = []
+        #: Guards the storage-failure dialog; the save timer fires every
+        #: four seconds and must not produce a dialog each time.
+        self._storage_warned = False
 
         self.setWindowTitle(APP_NAME)
         self.setMinimumSize(560, 420)
@@ -214,13 +222,12 @@ class MainWindow(QMainWindow):
             theme_menu.addAction(action)
 
         view_menu.addSeparator()
-        view_menu.addAction(_action(self, "Schrift vergrößern",
-                                    QKeySequence.ZoomIn, lambda: self.change_font_size(1)))
-        view_menu.addAction(_action(self, "Schrift verkleinern",
-                                    QKeySequence.ZoomOut, lambda: self.change_font_size(-1)))
-        view_menu.addAction(_action(self, "Schriftgröße zurücksetzen",
-                                    QKeySequence(Qt.CTRL | Qt.Key_0),
-                                    lambda: self.set_font_size(17)))
+        view_menu.addAction(_action(self, "Vergrößern", QKeySequence.ZoomIn,
+                                    lambda: self.zoom_in()))
+        view_menu.addAction(_action(self, "Verkleinern", QKeySequence.ZoomOut,
+                                    lambda: self.zoom_out()))
+        view_menu.addAction(_action(self, "Zoom zurücksetzen",
+                                    QKeySequence(Qt.CTRL | Qt.Key_0), self.zoom_reset))
         view_menu.addSeparator()
 
         self.action_sidebar = _action(self, "Seitenleiste", QKeySequence(Qt.Key_F9),
@@ -319,6 +326,7 @@ class MainWindow(QMainWindow):
 
     def _on_load_finished(self, book: Book, html: str) -> None:
         self.progress_bar.setVisible(False)
+        previous_id = self.book_id
         self.book = book
         try:
             self.book_id = file_id(book.path)
@@ -332,11 +340,20 @@ class MainWindow(QMainWindow):
         state = self.library.state(self.book_id)
 
         if book.kind is BookKind.PDF:
-            self._show_pdf(book, state)
+            shown = self._show_pdf(book, state)
         elif book.kind is BookKind.COMIC:
-            self._show_comic(book, state)
+            shown = self._show_comic(book, state)
         else:
-            self._show_text(book, html, state)
+            shown = self._show_text(book, html, state)
+
+        if not shown:
+            # The view refused the file after we had already recorded it.  Undo
+            # that, or the application would sit there claiming a book is open.
+            self.library.forget_book(self.book_id)
+            self.book = None
+            self.book_id = previous_id
+            self._update_actions()
+            return
 
         self.setWindowTitle("%s — %s" % (book.display_title, APP_NAME))
         self._show_warnings(book)
@@ -344,7 +361,7 @@ class MainWindow(QMainWindow):
         self._update_actions()
         self.bookOpened.emit(book)
 
-    def _show_text(self, book: Book, html: str, state) -> None:
+    def _show_text(self, book: Book, html: str, state) -> bool:
         self.reader.set_book(book, html)
         self.reader.set_highlights(state.highlights)
         self.stack.setCurrentWidget(self.reader)
@@ -355,24 +372,56 @@ class MainWindow(QMainWindow):
         # cursor rectangle we scroll to is still empty.
         self._restoring_position = state.position
         QTimer.singleShot(0, self._restore_position)
+        self._index_toc_positions(book)
         self.reader.setFocus()
+        return True
 
-    def _show_pdf(self, book: Book, state) -> None:
-        try:
-            self.pdf.open_file(book.path)
-        except LoadError as exc:
-            self._on_load_failed(str(exc), "")
-            return
+    def _show_pdf(self, book: Book, state) -> bool:
+        if not self._open_pdf_with_password(book.path):
+            return False
         self.pdf.fill_metadata(book)
         self.pdf.set_zoom_mode(self.settings["pdf_zoom_mode"])
+        if self.settings["pdf_zoom_mode"] == "custom":
+            # The factor was already being stored; it just was never read back.
+            self.pdf.setZoomFactor(float(self.settings["pdf_zoom"]))
         self.stack.setCurrentWidget(self.pdf)
         self.bookmark_panel.populate(state.bookmarks)
         self.annotation_panel.populate([])
         if state.position:
             self.pdf.go_to_page(state.position)
         self.pdf.setFocus()
+        return True
 
-    def _show_comic(self, book: Book, state) -> None:
+    def _open_pdf_with_password(self, path: str) -> bool:
+        """Open a PDF, asking for its password if it turns out to need one.
+
+        ``PdfView.open_file`` has always accepted a password, but nothing ever
+        supplied one, so an encrypted PDF was simply unopenable while the code
+        looked as though it handled the case.
+        """
+
+        password = ""
+        for attempt in range(4):
+            try:
+                self.pdf.open_file(path, password)
+                return True
+            except LoadError as exc:
+                if not self.pdf.needs_password():
+                    self._on_load_failed(str(exc), "")
+                    return False
+            prompt = ("Dieses PDF ist passwortgeschützt.\nPasswort:" if attempt == 0
+                      else "Passwort falsch. Bitte erneut versuchen:")
+            password, accepted = QInputDialog.getText(
+                self, "Passwort erforderlich", prompt, QLineEdit.Password
+            )
+            if not accepted:
+                self.progress_bar.setVisible(False)
+                self.status_title.setText("")
+                return False
+        self._on_load_failed("Das PDF konnte mit diesem Passwort nicht geöffnet werden.", "")
+        return False
+
+    def _show_comic(self, book: Book, state) -> bool:
         self.comic.set_book(book)
         self.stack.setCurrentWidget(self.comic)
         self.toc_panel.populate(book.toc)
@@ -381,6 +430,39 @@ class MainWindow(QMainWindow):
         if state.position:
             self.comic.go_to_page(state.position)
         self.comic.setFocus()
+        return True
+
+    def _index_toc_positions(self, book: Book) -> None:
+        """Work out where each outline entry sits in the assembled document.
+
+        Anchors inside a chapter are frequently dropped by Qt, so an entry that
+        cannot be located exactly falls back to the start of its chapter — which
+        for the usual one-entry-per-chapter outline is the same place.
+        """
+
+        anchors = self.reader.anchor_positions()
+        found: list[tuple[int, object]] = []
+        for _level, entry in _walk_toc(book.toc):
+            target = entry.target
+            if not isinstance(target, str):
+                continue
+            name = target.lstrip("#")
+            position = anchors.get(name)
+            if position is None:
+                position = anchors.get(name.split("__")[0])
+            if position is not None:
+                found.append((position, entry.target))
+        found.sort(key=lambda pair: pair[0])
+        self._toc_positions = found
+
+    def _sync_toc_to_position(self, position: int) -> None:
+        if not self._toc_positions:
+            return
+        index = bisect.bisect_right(
+            [start for start, _target in self._toc_positions], position
+        ) - 1
+        if index >= 0:
+            self.toc_panel.mark_current(self._toc_positions[index][1])
 
     def toc_panel_populate(self, entries) -> None:
         self.toc_panel.populate(entries)
@@ -399,6 +481,8 @@ class MainWindow(QMainWindow):
         self.status_title.setText("")
         box = QMessageBox(self)
         box.setIcon(QMessageBox.Warning)
+        # Carries file names and parser output, so it must not read markup.
+        box.setTextFormat(Qt.PlainText)
         box.setWindowTitle("Buch konnte nicht geöffnet werden")
         box.setText(message)
         if detail:
@@ -406,6 +490,7 @@ class MainWindow(QMainWindow):
         box.exec()
 
     def close_book(self) -> None:
+        self._toc_positions = []
         self._persist_position()
         self._save_timer.stop()
         self.book = None
@@ -501,12 +586,15 @@ class MainWindow(QMainWindow):
         )
         if self.book:
             self.status_title.setText(self._title_line())
+        self._sync_toc_to_position(position)
 
     def _on_page_position(self, page: int, total: int) -> None:
         self.status_position.setText("Seite %d/%d · %d %%"
                                      % (page, total, int(100 * page / total) if total else 0))
         if self.book:
             self.status_title.setText(self._title_line())
+        # PDF and comic outlines address pages directly, so no index is needed.
+        self.toc_panel.mark_current(page - 1)
 
     def _title_line(self) -> str:
         assert self.book is not None
@@ -520,10 +608,44 @@ class MainWindow(QMainWindow):
         if self.active_view is self.reader:
             document = self.reader.document()
             total = document.characterCount() if document else 0
-            self.library.save_position(self.book_id, self.reader.text_position(), total)
+            saved = self.library.save_position(
+                self.book_id, self.reader.text_position(), total
+            )
         elif self.active_view in (self.pdf, self.comic):
             view = self.active_view
-            self.library.save_position(self.book_id, view.current_page - 1, view.page_count)
+            saved = self.library.save_position(
+                self.book_id, view.current_page - 1, view.page_count
+            )
+        else:
+            return
+        if not saved:
+            self._report_storage_failure()
+
+    def _report_storage_failure(self) -> None:
+        """Say once that the reading position is no longer being stored.
+
+        Losing the position quietly is the worst outcome: the reader keeps
+        working and the loss only surfaces on the next launch.  Reported once
+        per session, because this runs on a four-second timer.
+        """
+
+        if self._storage_warned:
+            return
+        self._storage_warned = True
+        self.status_title.setText(
+            "Leseposition kann nicht gespeichert werden — Bibliothek nicht beschreibbar."
+        )
+        box = QMessageBox(self)
+        box.setIcon(QMessageBox.Warning)
+        box.setTextFormat(Qt.PlainText)
+        box.setWindowTitle("Speichern nicht möglich")
+        box.setText(
+            "Die Leseposition lässt sich nicht speichern.\n\n"
+            "Die Bibliotheksdatei ist gesperrt oder schreibgeschützt:\n%s\n\n"
+            "Das Lesen funktioniert weiter, aber Positionen, Lesezeichen und "
+            "Markierungen dieser Sitzung gehen verloren." % self.library.path
+        )
+        box.exec()
 
     # ------------------------------------------------------------------
     # Annotations
@@ -671,6 +793,9 @@ class MainWindow(QMainWindow):
         self._search_matches = []
         self._search_index = -1
         self.reader.set_search_matches([])
+        # The side panel keeps its own copy of the hits, so it has to be told;
+        # otherwise stale results stay listed after the search is dismissed.
+        self.search_panel.clear_results()
         if self.active_view is self.pdf:
             self.pdf.clear_search()
 
@@ -693,6 +818,34 @@ class MainWindow(QMainWindow):
         self.welcome.apply_theme(key)
         for action in self._theme_group.actions():
             action.setChecked(action.data() == key)
+
+    def zoom_in(self) -> None:
+        self._zoom(1)
+
+    def zoom_out(self) -> None:
+        self._zoom(-1)
+
+    def zoom_reset(self) -> None:
+        if self.active_view is self.pdf:
+            self.pdf.set_zoom_mode("width")
+            self.statusBar().showMessage("Zoom: an Breite angepasst", 1800)
+        else:
+            self.set_font_size(DEFAULTS["font_size"])
+
+    def _zoom(self, direction: int) -> None:
+        """Route the zoom keys to whatever is actually on screen.
+
+        In a PDF the page is a fixed layout, so changing the reading font does
+        nothing visible — Ctrl+Plus appeared broken.  The same keys now scale
+        the page there and the type everywhere else.
+        """
+
+        if self.active_view is self.pdf:
+            self.pdf.zoom_by(1.25 if direction > 0 else 1 / 1.25)
+            self.statusBar().showMessage(
+                "Zoom: %d %%" % round(self.pdf.zoomFactor() * 100), 1800)
+        else:
+            self.change_font_size(direction)
 
     def change_font_size(self, delta: int) -> None:
         self.set_font_size(int(self.settings["font_size"]) + delta)
@@ -762,12 +915,17 @@ class MainWindow(QMainWindow):
             self.welcome.refresh()
 
     def _confirm_external_link(self, target: str) -> None:
-        answer = QMessageBox.question(
-            self, "Link öffnen",
-            "Diesen Link im Browser öffnen?\n\n%s" % target,
-            QMessageBox.Yes | QMessageBox.No, QMessageBox.No,
-        )
-        if answer == QMessageBox.Yes:
+        box = QMessageBox(self)
+        box.setIcon(QMessageBox.Question)
+        # The whole point of this dialog is showing the real destination, so it
+        # must never interpret the address as markup.  Qt's AutoText would let a
+        # crafted link disguise itself as something else.
+        box.setTextFormat(Qt.PlainText)
+        box.setWindowTitle("Link öffnen")
+        box.setText("Diesen Link im Browser öffnen?\n\n%s" % target)
+        box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        box.setDefaultButton(QMessageBox.No)
+        if box.exec() == QMessageBox.Yes:
             QDesktopServices.openUrl(QUrl(target))
 
     def show_shortcuts(self) -> None:
@@ -826,7 +984,9 @@ class MainWindow(QMainWindow):
         self.settings["window_state"] = bytes(self.saveState().toBase64()).decode("ascii")
         self.settings["sidebar_visible"] = self.sidebar.isVisible()
         self.settings.save()
-        self.loader.cancel()
+        # Waiting is right at exit and wrong anywhere else: a worker thread that
+        # outlives the interpreter is worse than a brief pause here.
+        self.loader.shutdown()
         super().closeEvent(event)
 
 
@@ -858,6 +1018,13 @@ Dateien
     Strg+O                       Buch öffnen
     Strg+W                       Buch schließen
 """
+
+
+def _walk_toc(entries):
+    """Yield ``(depth, entry)`` for a nested table of contents."""
+
+    for entry in entries:
+        yield from entry.flatten()
 
 
 def _action(parent, text: str, shortcut, slot) -> QAction:

@@ -37,7 +37,17 @@ DROP_SUBTREE = {
     "noscript", "rt", "rp",
 }
 
+#: Elements we emit in self-closing form.
 VOID_TAGS = {"br", "hr", "img", "wbr", "col"}
+
+#: Every element that is empty by definition in HTML — no end tag exists, with
+#: or without a closing slash.  Opening a drop region on one of these would
+#: never be closed again and would swallow the rest of the chapter, so this set
+#: is deliberately the full specification list rather than only what we emit.
+HTML_VOID = {
+    "area", "base", "br", "col", "embed", "hr", "img", "input", "link",
+    "meta", "param", "source", "track", "wbr",
+}
 
 #: Attributes kept per tag.  Everything else is dropped, which both avoids
 #: confusing Qt and removes any scripting surface from untrusted book files.
@@ -90,6 +100,11 @@ class _Normalizer(HTMLParser):
         self._in_title = False
         self._open: list[str] = []
         self._svg_depth = 0
+        #: True while handling a ``<tag/>`` reported by ``handle_startendtag``.
+        self._self_closing = False
+        #: Set when a drop region was still open at the end of the document,
+        #: which means content was lost and the reader should say so.
+        self.truncated = False
 
     # -- helpers ---------------------------------------------------------
     def _emit(self, text: str) -> None:
@@ -130,16 +145,23 @@ class _Normalizer(HTMLParser):
                 self._drop_depth += 1
             return
 
+        # An empty element has no end tag to close a drop region with, so
+        # opening one would swallow the entire rest of the chapter.  Discarding
+        # just this element is both correct and enough.
+        empty = tag in HTML_VOID or self._self_closing
+
         if tag in DROP_SUBTREE:
-            self._drop_depth = 1
-            self._drop_tag = tag
+            if not empty:
+                self._drop_depth = 1
+                self._drop_tag = tag
             return
 
         # ``display:none`` is genuinely hidden content (alternate covers, notes
         # meant for other renderers).  Qt ignores the property, so we honour it.
         if _HIDDEN_RE.search(adict.get("style", "")):
-            self._drop_depth = 1
-            self._drop_tag = tag
+            if not empty:
+                self._drop_depth = 1
+                self._drop_tag = tag
             return
 
         if tag in ("html", "body"):
@@ -198,7 +220,13 @@ class _Normalizer(HTMLParser):
         lower = tag.lower()
         if lower in DROP_SUBTREE:
             return
-        self.handle_starttag(tag, attrs)
+        # Tell handle_starttag that this element closes itself, so a hidden
+        # ``<img style="display:none"/>`` discards only itself.
+        self._self_closing = True
+        try:
+            self.handle_starttag(tag, attrs)
+        finally:
+            self._self_closing = False
         if lower == "svg":
             self._svg_depth = max(0, self._svg_depth - 1)
         elif lower not in VOID_TAGS and lower != "image":
@@ -242,6 +270,13 @@ class _Normalizer(HTMLParser):
         pass
 
     def close_all(self) -> None:
+        if self._drop_depth:
+            # A hidden or dropped element was never closed, so everything after
+            # it was discarded.  Silently losing half a chapter is the worst
+            # possible outcome; record it so the reader can say so.
+            self.truncated = True
+            self._drop_depth = 0
+            self._drop_tag = ""
         while self._open:
             self.out.append("</%s>" % self._open.pop())
 
@@ -255,11 +290,27 @@ def normalize(
 ) -> tuple[str, str]:
     """Return ``(body_html, document_title)`` ready for ``QTextDocument``."""
 
+    body, title, _truncated = normalize_ex(
+        html, anchor_prefix=anchor_prefix,
+        resolve_href=resolve_href, resolve_src=resolve_src,
+    )
+    return body, title
+
+
+def normalize_ex(
+    html: str,
+    *,
+    anchor_prefix: str,
+    resolve_href: Callable[[str], str] = lambda h: h,
+    resolve_src: Callable[[str], str] = lambda s: s,
+) -> tuple[str, str, bool]:
+    """As :func:`normalize`, but also reports whether content was truncated."""
+
     parser = _Normalizer(anchor_prefix, resolve_href, resolve_src)
     parser.feed(html)
     parser.close()
     parser.close_all()
-    return "".join(parser.out), parser.title.strip()
+    return "".join(parser.out), parser.title.strip(), parser.truncated
 
 
 _TAG_RE = re.compile(r"<[^>]+>")

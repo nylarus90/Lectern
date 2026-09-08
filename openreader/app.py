@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import argparse
 import os
+import sqlite3
 import sys
+import tempfile
 
 from .version import APP_NAME, ORG_NAME, __version__
 
@@ -71,6 +73,33 @@ def _message_box(message: str) -> None:
         pass
 
 
+def _open_storage():
+    """Open settings and library, falling back to a throwaway directory.
+
+    An unwritable data directory — a read-only stick in portable mode, a bad
+    ``--data-dir``, a locked roaming profile — used to raise before any window
+    existed.  In the windowed build that meant the program simply never
+    appeared: no window, no message, nothing.  Reading is still possible
+    without persistence, so say what happened and carry on.
+    """
+
+    from .storage.db import Library
+    from .storage.settings import Settings
+
+    try:
+        return Settings(), Library()
+    except (OSError, sqlite3.Error) as exc:
+        fallback = tempfile.mkdtemp(prefix="openreader-")
+        _message_box(
+            "Die Bibliothek konnte nicht geöffnet werden:\n\n%s\n\n"
+            "OpenReader startet mit einem temporären Speicherort. Bücher lassen "
+            "sich lesen, aber Leseposition, Lesezeichen und Notizen dieser "
+            "Sitzung werden nicht dauerhaft gespeichert." % exc
+        )
+        os.environ["OPENREADER_DATA_DIR"] = fallback
+        return Settings(), Library()
+
+
 def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser = _Parser(
         prog="openreader",
@@ -129,12 +158,9 @@ def main(argv: list[str] | None = None) -> int:
     app.setApplicationVersion(__version__)
     app.setWindowIcon(_icon())
 
-    from .storage.db import Library
-    from .storage.settings import Settings
     from .ui.main_window import MainWindow
 
-    settings = Settings()
-    library = Library()
+    settings, library = _open_storage()
 
     window = MainWindow(settings, library)
     window.show()

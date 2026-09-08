@@ -38,18 +38,27 @@ class PdfView(QPdfView):
         self.setZoomMode(QPdfView.ZoomMode.FitToWidth)
         self.setPageSpacing(10)
         self.pageNavigator().currentPageChanged.connect(self._emit_position)
+        self._needs_password = False
 
     # -- document ---------------------------------------------------------
     def open_file(self, path: str, password: str = "") -> None:
-        if password:
-            self._document.setPassword(password)
+        self._needs_password = False
+        self._document.setPassword(password)
         error = self._document.load(path)
         if error == QPdfDocument.Error.IncorrectPassword:
+            # Recorded so the window knows to ask, rather than reporting a
+            # dead end for a file that is perfectly readable with a password.
+            self._needs_password = True
             raise LoadError("Das PDF ist passwortgeschützt.")
         if error != QPdfDocument.Error.None_:
             raise LoadError("Das PDF konnte nicht geöffnet werden (%s)." % error.name)
         self.outlineReady.emit(self.outline())
         self._emit_position()
+
+    def needs_password(self) -> bool:
+        """True when the last :meth:`open_file` failed only for want of one."""
+
+        return self._needs_password
 
     def fill_metadata(self, book: Book) -> None:
         """Complete the book's metadata from the opened document."""

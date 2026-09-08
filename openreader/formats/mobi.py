@@ -15,7 +15,7 @@ import re
 import struct
 from typing import Callable
 
-from ..render.html_clean import anchor_name, normalize, strip_tags
+from ..render.html_clean import anchor_name, normalize_ex, strip_tags
 from .base import Book, BookKind, Chapter, DRMError, LoadError, Metadata, TocEntry, noop_progress
 
 # -- MOBI header offsets ----------------------------------------------------
@@ -308,7 +308,16 @@ def _make_decompressor(db, compression: int, huff_offset: int, huff_count: int):
     if compression == 17480:
         if not huff_offset or huff_offset >= db.count:
             raise LoadError("Das Buch nutzt HUFF/CDIC, aber die Tabelle fehlt.")
-        cdics = [db.record(huff_offset + i) for i in range(1, max(1, huff_count))]
+        # huff_count comes straight out of the file.  Taken at face value, a
+        # forged 0x0FFFFFFF made this loop allocate gigabytes before failing, so
+        # it is clamped to the records that actually exist.
+        available = db.count - huff_offset
+        if not 0 < huff_count <= available:
+            raise LoadError(
+                "Die HUFF/CDIC-Tabelle der Datei ist widersprüchlich "
+                "(%d Einträge angekündigt, %d vorhanden)." % (huff_count, available)
+            )
+        cdics = [db.record(huff_offset + i) for i in range(1, huff_count)]
         return HuffCdic(db.record(huff_offset), cdics).decompress
     raise LoadError("Unbekanntes Kompressionsverfahren (%d) in der Kindle-Datei." % compression)
 
@@ -357,14 +366,22 @@ def _load_container(path: str, db, progress, *, allow_boundary: bool) -> Book:
 
     if has_mobi:
         header = record0[16:]
-        header_length = struct.unpack_from(">I", header, 4)[0]
-        encoding = CODEPAGES.get(struct.unpack_from(">I", header, OFF_ENCODING)[0], "cp1252")
-        file_version = struct.unpack_from(">I", header, OFF_VERSION)[0]
 
         def field(offset: int) -> int:
+            """Read a big-endian word, or 0 if the header is too short.
+
+            Header lengths in these files are frequently wrong or the file is
+            simply truncated, so every field goes through here.  Reading past
+            the end raised ``struct.error`` and reached the user as a traceback
+            instead of a sentence.
+            """
+
             return (struct.unpack_from(">I", header, offset)[0]
                     if len(header) >= offset + 4 else 0)
 
+        header_length = field(4)
+        encoding = CODEPAGES.get(field(OFF_ENCODING), "cp1252")
+        file_version = field(OFF_VERSION)
         first_resource = field(OFF_FIRST_RESOURCE)
         huff_offset = field(OFF_HUFF_OFF)
         huff_count = field(OFF_HUFF_COUNT)
@@ -455,11 +472,22 @@ def _build_document(
     text = _PAGEBREAK_RE.sub(b'<div class="or-pagebreak"></div>', text)
 
     # ``filepos`` targets are byte offsets into this very buffer, so the anchors
-    # must be injected before decoding, and from the back so offsets stay valid.
-    targets = sorted({int(m.group(1)) for m in _FILEPOS_BYTES_RE.finditer(text)}, reverse=True)
-    for offset in targets:
-        if 0 <= offset <= len(text):
-            text = text[:offset] + (b'<a name="fp%d"></a>' % offset) + text[offset:]
+    # must be injected before decoding.  Splicing them in one at a time rebuilt
+    # the whole buffer per target — quadratic, and a book with thousands of
+    # footnotes felt it.  Walking the offsets in order and joining once is
+    # linear and produces byte-identical output.
+    targets = sorted({int(m.group(1)) for m in _FILEPOS_BYTES_RE.finditer(text)})
+    if targets:
+        pieces: list[bytes] = []
+        previous = 0
+        for offset in targets:
+            if not 0 <= offset <= len(text):
+                continue
+            pieces.append(text[previous:offset])
+            pieces.append(b'<a name="fp%d"></a>' % offset)
+            previous = offset
+        pieces.append(text[previous:])
+        text = b"".join(pieces)
 
     html = text.decode(encoding, "replace")
     html = _FILEPOS_RE.sub(lambda m: 'href="#fp%d"' % int(m.group(1)), html)
@@ -506,12 +534,16 @@ def _build_document(
             return "#" + anchor_name("ch0", href[1:])
         return ""
 
-    body, doc_title = normalize(
+    body, doc_title, truncated = normalize_ex(
         html,
         anchor_prefix="ch0",
         resolve_href=resolve_href,
         resolve_src=lambda s: s if s in book.resources else "",
     )
+    if truncated:
+        book.warnings.append(
+            "Das Buch ist unvollständig: ein ausgeblendeter Bereich wurde nie geschlossen."
+        )
     if not book.meta.title:
         book.meta.title = doc_title
 

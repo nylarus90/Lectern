@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import time
+from html import escape
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QColor, QIcon, QPixmap
@@ -49,7 +50,9 @@ class TocPanel(QTreeWidget):
         def add(parent, entry: TocEntry) -> None:
             item = QTreeWidgetItem(parent, [entry.title])
             item.setData(0, Qt.UserRole, entry.target)
-            item.setToolTip(0, entry.title)
+            # Chapter titles come from the book; Qt renders tooltips as rich
+            # text when they look like markup, so neutralise them.
+            item.setToolTip(0, _plain(entry.title))
             for child in entry.children:
                 add(item, child)
 
@@ -173,7 +176,9 @@ class AnnotationPanel(QWidget):
             item.setData(Qt.UserRole, mark.start)
             item.setData(Qt.UserRole + 1, mark.ident)
             item.setIcon(_colour_icon(mark.colour))
-            item.setToolTip("%s\n\n%s" % (mark.excerpt, mark.note) if mark.note else mark.excerpt)
+            item.setToolTip(_plain(
+                "%s\n\n%s" % (mark.excerpt, mark.note) if mark.note else mark.excerpt
+            ))
             self.list.addItem(item)
         self.list.setVisible(bool(highlights))
         self.empty.setVisible(not highlights)
@@ -276,6 +281,12 @@ class SearchPanel(QWidget):
         else:
             self.status.setText("%d Treffer für „%s“." % (len(snippets), needle))
 
+    def clear_results(self) -> None:
+        """Empty the hit list and its status line."""
+
+        self.results.clear()
+        self.status.setText("")
+
     def select_result(self, index: int) -> None:
         if 0 <= index < self.results.count():
             self.results.blockSignals(True)
@@ -284,6 +295,17 @@ class SearchPanel(QWidget):
 
     def _choose(self, item: QListWidgetItem) -> None:
         self.resultChosen.emit(int(item.data(Qt.UserRole)))
+
+
+def _plain(text: str) -> str:
+    """Keep book text from being rendered as markup in a tooltip.
+
+    Qt shows a tooltip as rich text whenever the string looks like HTML, so an
+    excerpt or chapter title containing angle brackets would be reformatted —
+    or partly swallowed.  Escaping settles it without changing the wording.
+    """
+
+    return escape(text, quote=False)
 
 
 def _colour_icon(key: str, size: int = 12) -> QIcon:

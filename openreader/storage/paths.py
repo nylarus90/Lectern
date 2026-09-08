@@ -6,6 +6,7 @@ storage layer can be used and tested without a running ``QApplication``.
 
 from __future__ import annotations
 
+import contextlib
 import os
 import sys
 
@@ -33,8 +34,30 @@ def data_dir() -> str:
         base = os.path.join(
             os.environ.get("XDG_DATA_HOME") or os.path.expanduser("~/.local/share"), APP_ID
         )
-    os.makedirs(base, exist_ok=True)
+    # A reading history is a precise profile of someone's interests, so the
+    # directory is owned by its user alone.  ``makedirs`` applies the mode only
+    # when it creates the directory, hence the explicit chmod for one that
+    # already exists — and both are skipped on Windows, where POSIX bits mean
+    # nothing and the ACL inherited from the profile already restricts access.
+    os.makedirs(base, mode=0o700, exist_ok=True)
+    if sys.platform != "win32":
+        with contextlib.suppress(OSError):
+            os.chmod(base, 0o700)
     return base
+
+
+def secure_file(path: str) -> None:
+    """Restrict an existing data file to its owner.
+
+    Called after creating the database and the settings file; failures are
+    ignored because a file system without POSIX permissions (a FAT-formatted
+    USB stick in portable mode) is a legitimate place to keep a library.
+    """
+
+    if sys.platform == "win32":
+        return
+    with contextlib.suppress(OSError):
+        os.chmod(path, 0o600)
 
 
 def database_path() -> str:

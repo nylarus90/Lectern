@@ -10,7 +10,7 @@ import json
 import os
 from typing import Any
 
-from .paths import settings_path
+from .paths import secure_file, settings_path
 
 DEFAULTS: dict[str, Any] = {
     "theme": "light",              # light | sepia | dark | black
@@ -21,8 +21,6 @@ DEFAULTS: dict[str, Any] = {
     "text_width": 44,              # maximum line length in em; 0 disables the cap
     "paragraph_spacing": 0.7,
     "justify": True,
-    "hyphenate": False,
-    "reading_mode": "paged",       # paged | scroll
     "use_publisher_css": False,
     "window_geometry": "",
     "window_state": "",
@@ -35,6 +33,41 @@ DEFAULTS: dict[str, Any] = {
 
 #: Presets the view turns into concrete colours.
 THEMES = ("light", "sepia", "dark", "black")
+
+#: Permitted range per numeric setting, mirroring the dialog's spin boxes.
+#: Type coercion alone let a hand-edited ``"font_size": 1000000`` through to
+#: ``QFont.setPointSize``, leaving a window that could only be repaired by
+#: deleting the file.
+RANGES: dict[str, tuple[float, float]] = {
+    "font_size": (6, 96),
+    "line_height": (0.8, 4.0),
+    "page_margin": (0, 400),
+    "text_width": (0, 200),
+    "paragraph_spacing": (0.0, 4.0),
+    "recent_limit": (1, 200),
+    "pdf_zoom": (0.05, 16.0),
+}
+
+#: Permitted values per enumerated setting.
+CHOICES: dict[str, tuple[str, ...]] = {
+    "theme": THEMES,
+    "comic_fit": ("width", "height", "page", "original"),
+    "pdf_zoom_mode": ("width", "page", "custom"),
+}
+
+
+def sanitise(key: str, value: Any) -> Any:
+    """Clamp a value into the range this setting actually supports."""
+
+    low_high = RANGES.get(key)
+    if low_high is not None and isinstance(value, (int, float)):
+        low, high = low_high
+        value = max(low, min(high, value))
+        return int(value) if isinstance(DEFAULTS[key], int) else float(value)
+    allowed = CHOICES.get(key)
+    if allowed is not None and value not in allowed:
+        return DEFAULTS[key]
+    return value
 
 
 class Settings:
@@ -59,15 +92,18 @@ class Settings:
             default = DEFAULTS[key]
             try:
                 if isinstance(default, bool):
-                    self._values[key] = bool(value)
+                    coerced: Any = bool(value)
                 elif isinstance(default, int):
-                    self._values[key] = int(value)
+                    coerced = int(value)
                 elif isinstance(default, float):
-                    self._values[key] = float(value)
+                    coerced = float(value)
                 elif isinstance(default, str) and isinstance(value, str):
-                    self._values[key] = value
+                    coerced = value
+                else:
+                    continue
             except (TypeError, ValueError):
                 continue
+            self._values[key] = sanitise(key, coerced)
 
     def save(self) -> None:
         os.makedirs(os.path.dirname(self.path) or ".", exist_ok=True)
@@ -75,12 +111,15 @@ class Settings:
         with open(temporary, "w", encoding="utf-8") as handle:
             json.dump(self._values, handle, indent=2, ensure_ascii=False)
         os.replace(temporary, self.path)
+        secure_file(self.path)
 
     def __getitem__(self, key: str) -> Any:
         return self._values.get(key, DEFAULTS.get(key))
 
     def __setitem__(self, key: str, value: Any) -> None:
-        self._values[key] = value
+        # Clamped here too, so a caller cannot write a value that reloading
+        # would reject — the file and the running program stay in agreement.
+        self._values[key] = sanitise(key, value)
 
     def get(self, key: str, fallback: Any = None) -> Any:
         return self._values.get(key, fallback if fallback is not None else DEFAULTS.get(key))

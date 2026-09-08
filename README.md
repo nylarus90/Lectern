@@ -100,6 +100,7 @@ python -m openreader                     # starten
 python -m pytest                         # 118 Tests
 python tests/smoke_gui.py --visible      # Screenshots aller Ansichten
 python tests/bench_reader.py             # Scroll-Leistung messen
+python tests/bench_prefetch.py --book X  # Restruckler beziffern
 pyinstaller build/openreader.spec --noconfirm --distpath build/dist
 ```
 
@@ -146,6 +147,19 @@ das wurde jede Abbildung bei **jedem einzelnen Neuzeichnen** neu dekodiert und
 geglättet skaliert. Auf einem 21-MB-Roman mit 15 ganzseitigen Tafeln kostete das
 303 ms pro Frame; die Hälfte aller Frames lag unter 30 fps. Gemessen und behoben:
 siehe [Scroll-Leistung](#scroll-leistung).
+
+**Warum werden Bilder nicht im Hintergrund vorausgeladen?**
+Weil gemessen wurde, was es brächte. Nach dem Cache bleibt ein Restaufwand: Ein
+Bild muss beim allerersten Erscheinen einmal dekodiert werden. Über das
+vollständige Durchscrollen eines 21-MB-Bilderbuchs sind das **11 spürbare Frames
+von 7.426** — 0,15 %, je rund 17 ms über dem Normalwert, also ein bis zwei
+ausgelassene Bilder bei 60 Hz. Einmal komplett durchblättern kostet insgesamt
+0,26 Sekunden. Im ungünstigsten Fall, einem Sprung über das Inhaltsverzeichnis,
+entfallen von etwa 59 ms nur ~25 ms aufs Dekodieren; ein Vorauslader könnte also
+nicht einmal die Hälfte davon einsparen. Dem stünden ein Hintergrund-Thread, ein
+gesperrter Cache, Vorhersagelogik für den sichtbaren Bereich und eine
+schwer testbare Klasse von Wettlauffehlern gegenüber. Nachrechnen mit
+`tests/bench_prefetch.py`.
 
 **Warum wird die Zeilenhöhe bei Bildern zurückgesetzt?**
 Ein relativer `line-height` multipliziert die Höhe des größten Elements einer

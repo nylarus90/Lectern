@@ -13,6 +13,12 @@ with checksums. What follows is what has to be right *before* the tag.
    grep -n "version" openreader/version.py pyproject.toml
    ```
 
+   `tests/test_version.py` compares the two, and on a tag build it also
+   compares them against the tag itself and against a dated changelog section.
+   That test exists because v1.1.0 was first tagged without the bump: the files
+   were named after the tag, the installer registered the old version, and all
+   eight jobs were green.
+
 2. **Write the changelog entry.** Add a section to `CHANGELOG.md` with the new
    version and the release date. Date it the day the tag is pushed.
 

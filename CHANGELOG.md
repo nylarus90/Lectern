@@ -4,7 +4,7 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 1.1.0 — 2026-09-09
 
 ### Added
 
@@ -20,6 +20,10 @@ All notable changes to this project are documented here. The format follows
   and refuses to finish unless every string actually translates at runtime.
 - `tests/test_i18n.py` fails the build if a German string appears outside
   `tr()`, which is how a half-translated window gets caught.
+- `tests/test_version.py` compares `version.py`, `pyproject.toml`, the release
+  tag and the changelog heading. This release was first tagged without the
+  version bump — the artefacts carried the new number in their file names while
+  the installer registered the old one, and nothing in CI noticed.
 
 ### Fixed
 

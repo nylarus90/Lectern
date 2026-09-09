@@ -52,6 +52,21 @@ Für Windows gibt es beides — für alles andere reicht die Programmdatei.
 | macOS (Apple Silicon) | `OpenReader-*-macos-arm64.zip` | Entpacken, dann Rechtsklick → „Öffnen“ (nicht signiert) |
 | Linux (x64, glibc ≥ 2.35) | `OpenReader-*-linux-x86_64` | `chmod +x` und starten |
 
+### Sprache
+
+Die Oberfläche spricht **Deutsch und Englisch**. Beim ersten Start richtet sie
+sich nach der Systemsprache: ein deutsches Windows bekommt Deutsch, alles
+andere Englisch. Fest einstellen lässt sie sich unter **Einstellungen → Lesen →
+Sprache**; sie greift nach einem Neustart.
+
+Qts eigene Dialogschaltflächen ziehen mit — ein deutsches Fenster sagt „OK" und
+„Abbrechen", nicht „OK" und „Cancel" —, weil das Paket Qts deutsche Übersetzung
+mitbringt.
+
+Eine weitere Sprache bedeutet: eine Datei neben `openreader_de.ts` in Qt
+Linguist übersetzen; `python build/make_translations.py` erzeugt und übersetzt
+den Rest.
+
 ### Beim ersten Start warnt Windows
 
 Beide Windows-Dateien sind **nicht signiert**, deshalb zeigt SmartScreen beim

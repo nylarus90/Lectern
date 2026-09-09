@@ -12,6 +12,7 @@ from __future__ import annotations
 import re
 from typing import Callable
 
+from ..i18n import tr
 from .base import Book, BookKind, LoadError, TocEntry, noop_progress
 
 _TITLE_RE = re.compile(rb"/Title\s*\((?P<literal>(?:\\.|[^\\)])*)\)|/Title\s*<(?P<hexed>[0-9A-Fa-f\s]+)>")
@@ -35,7 +36,7 @@ def _decode_pdf_string(literal: bytes | None, hexed: bytes | None) -> str:
 
 
 def load(path: str, progress: Callable[[int, str], None] = noop_progress) -> Book:
-    progress(10, "PDF wird geprüft…")
+    progress(10, tr("Checking PDF…"))
     with open(path, "rb") as handle:
         head = handle.read(1024)
         handle.seek(0, 2)
@@ -46,11 +47,11 @@ def load(path: str, progress: Callable[[int, str], None] = noop_progress) -> Boo
     # Some files carry junk before the header; accept those as long as the
     # signature appears near the start, which is what every PDF reader does.
     if b"%PDF-" not in head:
-        raise LoadError("Die Datei beginnt nicht mit einer PDF-Signatur.")
+        raise LoadError(tr("The file does not begin with a PDF signature."))
 
     book = Book(path=path, kind=BookKind.PDF)
 
-    progress(50, "Metadaten werden gelesen…")
+    progress(50, tr("Reading metadata…"))
     blob = head + tail
     match = _TITLE_RE.search(blob)
     if match:
@@ -64,9 +65,9 @@ def load(path: str, progress: Callable[[int, str], None] = noop_progress) -> Boo
     if _ENCRYPT_RE.search(blob):
         # Qt can still open PDFs with an empty owner password, so this is a
         # warning rather than a hard failure.
-        book.warnings.append("Das PDF ist verschlüsselt; ggf. wird ein Passwort verlangt.")
+        book.warnings.append(tr("The PDF is encrypted; a password may be required."))
 
     # The real outline comes from Qt once the document is open.
     book.toc = [TocEntry("Dokument", 0)]
-    progress(100, "Fertig")
+    progress(100, tr("Done"))
     return book

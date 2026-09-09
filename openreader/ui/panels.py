@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
 )
 
 from ..formats.base import TocEntry
+from ..i18n import tr
 from ..render import theme as theming
 
 
@@ -103,7 +104,7 @@ class BookmarkPanel(QWidget):
         self.list.customContextMenuRequested.connect(self._menu)
         layout.addWidget(self.list)
 
-        self.empty = QLabel("Noch keine Lesezeichen.\nMit Strg+B setzen.", self)
+        self.empty = QLabel(tr("No bookmarks yet.\nAdd one with Ctrl+B."), self)
         self.empty.setAlignment(Qt.AlignCenter)
         self.empty.setWordWrap(True)
         layout.addWidget(self.empty)
@@ -127,7 +128,7 @@ class BookmarkPanel(QWidget):
         if item is None:
             return
         menu = QMenu(self)
-        remove = menu.addAction("Lesezeichen löschen")
+        remove = menu.addAction(tr("Delete bookmark"))
         if menu.exec(self.list.mapToGlobal(point)) is remove:
             self.bookmarkRemoved.emit(int(item.data(Qt.UserRole + 1)))
 
@@ -154,12 +155,12 @@ class AnnotationPanel(QWidget):
         layout.addWidget(self.list)
 
         self.empty = QLabel(
-            "Noch keine Markierungen.\n\nText auswählen und Strg+H drücken.", self)
+            tr("No highlights yet.\n\nSelect text and press Ctrl+H."), self)
         self.empty.setAlignment(Qt.AlignCenter)
         self.empty.setWordWrap(True)
         layout.addWidget(self.empty)
 
-        self.export_button = QPushButton("Als Markdown exportieren…", self)
+        self.export_button = QPushButton(tr("Export as Markdown…"), self)
         self.export_button.clicked.connect(self.exportRequested)
         layout.addWidget(self.export_button)
 
@@ -193,14 +194,14 @@ class AnnotationPanel(QWidget):
             return
         ident = int(item.data(Qt.UserRole + 1))
         menu = QMenu(self)
-        note = menu.addAction("Notiz bearbeiten…")
-        colours = menu.addMenu("Farbe")
+        note = menu.addAction(tr("Edit note…"))
+        colours = menu.addMenu(tr("Colour"))
         colour_actions = {}
         for key, (label, _hexcolour) in theming.HIGHLIGHT_COLOURS.items():
             action = colours.addAction(_colour_icon(key), label)
             colour_actions[action] = key
         menu.addSeparator()
-        remove = menu.addAction("Markierung löschen")
+        remove = menu.addAction(tr("Delete highlight"))
 
         chosen = menu.exec(self.list.mapToGlobal(point))
         if chosen is note:
@@ -226,21 +227,21 @@ class SearchPanel(QWidget):
 
         row = QHBoxLayout()
         self.input = QLineEdit(self)
-        self.input.setPlaceholderText("Im Buch suchen…")
+        self.input.setPlaceholderText(tr("Search in the book…"))
         self.input.setClearButtonEnabled(True)
         self.input.returnPressed.connect(self._search)
         row.addWidget(self.input)
 
         close = QToolButton(self)
         close.setText("✕")
-        close.setToolTip("Suche schließen (Esc)")
+        close.setToolTip(tr("Close search (Esc)"))
         close.clicked.connect(self.closed)
         row.addWidget(close)
         layout.addLayout(row)
 
         options = QHBoxLayout()
-        self.case_box = QCheckBox("Groß/klein", self)
-        self.words_box = QCheckBox("Ganzes Wort", self)
+        self.case_box = QCheckBox(tr("Match case"), self)
+        self.words_box = QCheckBox(tr("Whole word"), self)
         self.case_box.toggled.connect(self._search)
         self.words_box.toggled.connect(self._search)
         options.addWidget(self.case_box)
@@ -277,9 +278,9 @@ class SearchPanel(QWidget):
             item.setData(Qt.UserRole, index)
             self.results.addItem(item)
         if not snippets:
-            self.status.setText("Keine Treffer für „%s“." % needle)
+            self.status.setText(tr("No matches for “%s”.") % needle)
         else:
-            self.status.setText("%d Treffer für „%s“." % (len(snippets), needle))
+            self.status.setText(tr("%d matches for “%s”.") % (len(snippets), needle))
 
     def clear_results(self) -> None:
         """Empty the hit list and its status line."""

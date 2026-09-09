@@ -13,6 +13,7 @@ from typing import Any
 from .paths import secure_file, settings_path
 
 DEFAULTS: dict[str, Any] = {
+    "language": "system",          # system | en | de
     "theme": "light",              # light | sepia | dark | black
     "font_family": "",             # empty means the platform serif default
     "font_size": 17,
@@ -50,6 +51,7 @@ RANGES: dict[str, tuple[float, float]] = {
 
 #: Permitted values per enumerated setting.
 CHOICES: dict[str, tuple[str, ...]] = {
+    "language": ("system", "en", "de"),
     "theme": THEMES,
     "comic_fit": ("width", "height", "page", "original"),
     "pdf_zoom_mode": ("width", "page", "custom"),

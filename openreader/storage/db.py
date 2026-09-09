@@ -15,6 +15,7 @@ import sqlite3
 import time
 from dataclasses import dataclass, field
 
+from ..i18n import tr
 from .paths import database_path, secure_file
 
 SCHEMA_VERSION = 1
@@ -259,18 +260,18 @@ class Library:
     def export_markdown(self, ident: str, title: str) -> str:
         """Render one book's annotations as Markdown for sharing or archiving."""
 
-        lines = ["# Notizen zu %s" % title, ""]
+        lines = [tr("# Notes on %s") % title, ""]
         bookmarks = self.bookmarks(ident)
         if bookmarks:
-            lines.append("## Lesezeichen")
+            lines.append(tr("## Bookmarks"))
             lines.append("")
             for mark in bookmarks:
-                lines.append("- %s (Position %d)" % (mark.label or "Lesezeichen", mark.position))
+                lines.append("- %s (Position %d)" % (mark.label or tr("Bookmark"), mark.position))
             lines.append("")
 
         marks = self.highlights(ident)
         if marks:
-            lines.append("## Markierungen")
+            lines.append(tr("## Highlights"))
             lines.append("")
             for mark in marks:
                 stamp = time.strftime("%d.%m.%Y", time.localtime(mark.created))
@@ -282,5 +283,5 @@ class Library:
                     lines.append(mark.note)
                 lines.append("")
         if not bookmarks and not marks:
-            lines.append("_Keine Anmerkungen vorhanden._")
+            lines.append(tr("_No annotations yet._"))
         return "\n".join(lines)

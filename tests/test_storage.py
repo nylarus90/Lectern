@@ -81,7 +81,7 @@ def test_markdown_export(library):
     library.add_bookmark("id1", 5, "Kapitel 3")
     library.add_highlight("id1", 6, 7, "pink", "Ein Satz", "Meine Notiz")
     text = library.export_markdown("id1", "Mein Buch")
-    assert "# Notizen zu Mein Buch" in text
+    assert "# Notes on Mein Buch" in text
     assert "Kapitel 3" in text
     assert "> Ein Satz" in text
     assert "Meine Notiz" in text
@@ -89,7 +89,7 @@ def test_markdown_export(library):
 
 def test_markdown_export_when_empty(library):
     library.remember_book("id1", "/p/a.epub", "A", "", "epub")
-    assert "Keine Anmerkungen" in library.export_markdown("id1", "Leer")
+    assert "No annotations" in library.export_markdown("id1", "Leer")
 
 
 # --------------------------------------------------------------------------

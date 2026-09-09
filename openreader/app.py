@@ -8,6 +8,7 @@ import sqlite3
 import sys
 import tempfile
 
+from .i18n import tr
 from .version import APP_NAME, ORG_NAME, __version__
 
 
@@ -91,10 +92,10 @@ def _open_storage():
     except (OSError, sqlite3.Error) as exc:
         fallback = tempfile.mkdtemp(prefix="openreader-")
         _message_box(
-            "Die Bibliothek konnte nicht geöffnet werden:\n\n%s\n\n"
-            "OpenReader startet mit einem temporären Speicherort. Bücher lassen "
-            "sich lesen, aber Leseposition, Lesezeichen und Notizen dieser "
-            "Sitzung werden nicht dauerhaft gespeichert." % exc
+            tr("The library could not be opened:\n\n%s\n\n"
+               "OpenReader starts with a temporary location. Books can be read, "
+               "but reading positions, bookmarks and notes from this session "
+               "will not be kept.") % exc
         )
         os.environ["OPENREADER_DATA_DIR"] = fallback
         return Settings(), Library()
@@ -103,19 +104,22 @@ def _open_storage():
 def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser = _Parser(
         prog="openreader",
-        description="%s — freier E-Book-Reader für EPUB, Kindle, FB2, PDF, "
-                    "Comics, Text, Markdown, HTML und RTF." % APP_NAME,
+        # Command-line help is printed before a QApplication exists, so it
+        # cannot be translated even in principle. English throughout, which is
+        # the convention for a command line anyway.
+        description="%s — free e-book reader for EPUB, Kindle, FB2, PDF, "
+                    "comics, text, Markdown, HTML and RTF." % APP_NAME,
     )
-    parser.add_argument("file", nargs="?", help="Buch, das beim Start geöffnet wird")
+    parser.add_argument("file", nargs="?", help="book to open at startup")
     parser.add_argument("--version", action="version", version="%s %s" % (APP_NAME, __version__))
     parser.add_argument(
-        "--data-dir", metavar="PFAD",
-        help="Verzeichnis für Einstellungen und Lesefortschritt "
-             "(für portable Nutzung, z. B. auf einem USB-Stick)",
+        "--data-dir", metavar="PATH",
+        help="directory for settings and reading progress "
+             "(for portable use, e.g. on a USB stick)",
     )
     parser.add_argument(
         "--portable", action="store_true",
-        help="Daten neben der Programmdatei ablegen statt im Benutzerprofil",
+        help="store data beside the executable instead of in the user profile",
     )
     return parser.parse_args(argv)
 
@@ -158,9 +162,16 @@ def main(argv: list[str] | None = None) -> int:
     app.setApplicationVersion(__version__)
     app.setWindowIcon(_icon())
 
-    from .ui.main_window import MainWindow
-
     settings, library = _open_storage()
+
+    # Before the window is built: widgets translate their text when they are
+    # created, so a translator installed afterwards would leave the first
+    # window in the source language.
+    from . import i18n
+
+    i18n.install(settings["language"])
+
+    from .ui.main_window import MainWindow
 
     window = MainWindow(settings, library)
     window.show()

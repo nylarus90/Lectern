@@ -4,6 +4,39 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Added
+
+- **English interface.** Source strings are English now, with German shipped as
+  a Qt translation; the language follows the system on first start and can be
+  fixed under Settings → Reading → Language. 189 strings, and the German wording
+  is the same text as before — it was moved into the translation file verbatim
+  rather than written anew.
+- Qt's own German translation (`qtbase_de.qm`, 220 KB) travels with the build,
+  so a German window no longer mixes German menus with English "OK" and
+  "Cancel" in standard dialogs.
+- `build/make_translations.py` extracts, fills and compiles the translations,
+  and refuses to finish unless every string actually translates at runtime.
+- `tests/test_i18n.py` fails the build if a German string appears outside
+  `tr()`, which is how a half-translated window gets caught.
+
+### Fixed
+
+- Two traps that make translations fail *silently* are now handled explicitly:
+  `lupdate` writes an empty context for a plain `tr()` function, which no
+  runtime lookup matches; and it re-marks entries "unfinished" whenever a source
+  line moves, after which `lrelease` drops them. Either one leaves the text in
+  the file and the window in English, with no error anywhere.
+
+### Known limitations
+
+- Command-line help (`--help`) stays English: it is printed before a
+  QApplication exists, so it cannot be translated even in principle.
+- Changing the language needs a restart. Qt only reads translated text when a
+  widget is built, so switching in place would leave half the window in the old
+  language — the dialog says so rather than pretending otherwise.
+
 ## 1.0.0 — 2026-09-09
 
 First public release. Everything below shipped in it; the entries record how

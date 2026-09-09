@@ -25,6 +25,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from .. import i18n
+from ..i18n import tr
 from ..render import theme as theming
 from ..storage.settings import DEFAULTS
 
@@ -35,13 +37,13 @@ class SettingsDialog(QDialog):
     def __init__(self, settings, parent=None) -> None:
         super().__init__(parent)
         self.settings = settings
-        self.setWindowTitle("Einstellungen")
+        self.setWindowTitle(tr("Settings"))
         self.setMinimumWidth(460)
 
         layout = QVBoxLayout(self)
         tabs = QTabWidget(self)
-        tabs.addTab(self._typography_tab(), "Typografie")
-        tabs.addTab(self._reading_tab(), "Lesen")
+        tabs.addTab(self._typography_tab(), tr("Typography"))
+        tabs.addTab(self._reading_tab(), tr("Reading"))
         layout.addWidget(tabs)
 
         buttons = QDialogButtonBox(QDialogButtonBox.Close | QDialogButtonBox.RestoreDefaults, self)
@@ -62,14 +64,14 @@ class SettingsDialog(QDialog):
         self.font_box.currentFontChanged.connect(
             lambda font: self._set("font_family", font.family())
         )
-        form.addRow("Schriftart", self.font_box)
+        form.addRow(tr("Font"), self.font_box)
 
         self.size_box = QSpinBox(page)
         self.size_box.setRange(8, 48)
         self.size_box.setSuffix(" pt")
         self.size_box.setValue(int(self.settings["font_size"]))
         self.size_box.valueChanged.connect(lambda value: self._set("font_size", value))
-        form.addRow("Schriftgröße", self.size_box)
+        form.addRow(tr("Font size"), self.size_box)
 
         self.line_slider = _slider(page, 100, 250, int(float(self.settings["line_height"]) * 100))
         self.line_label = QLabel("", page)
@@ -78,7 +80,7 @@ class SettingsDialog(QDialog):
                            self.line_label.setText("%.2f" % (value / 100)))
         )
         self.line_label.setText("%.2f" % float(self.settings["line_height"]))
-        form.addRow("Zeilenabstand", _with_label(self.line_slider, self.line_label))
+        form.addRow(tr("Line height"), _with_label(self.line_slider, self.line_label))
 
         self.spacing_slider = _slider(page, 0, 200,
                                       int(float(self.settings["paragraph_spacing"]) * 100))
@@ -87,28 +89,28 @@ class SettingsDialog(QDialog):
             lambda value: (self._set("paragraph_spacing", value / 100),
                            self.spacing_label.setText("%.2f" % (value / 100)))
         )
-        form.addRow("Absatzabstand", _with_label(self.spacing_slider, self.spacing_label))
+        form.addRow(tr("Paragraph spacing"), _with_label(self.spacing_slider, self.spacing_label))
 
         self.margin_box = QSpinBox(page)
         self.margin_box.setRange(0, 200)
         self.margin_box.setSuffix(" px")
         self.margin_box.setValue(int(self.settings["page_margin"]))
         self.margin_box.valueChanged.connect(lambda value: self._set("page_margin", value))
-        form.addRow("Seitenrand", self.margin_box)
+        form.addRow(tr("Page margin"), self.margin_box)
 
         self.width_box = QSpinBox(page)
         self.width_box.setRange(0, 120)
-        self.width_box.setSuffix(" Zeichen")
-        self.width_box.setSpecialValueText("unbegrenzt")
+        self.width_box.setSuffix(tr(" characters"))
+        self.width_box.setSpecialValueText(tr("unlimited"))
         self.width_box.setValue(int(self.settings["text_width"]))
         self.width_box.setToolTip(
-            "Maximale Zeilenlänge. Lange Zeilen sind der häufigste Grund dafür,\n"
-            "dass die Augen beim Zeilenwechsel die Spur verlieren."
+            tr("Maximum line length. Long lines are the commonest reason for the eye\n"
+               "losing its place at the end of a line.")
         )
         self.width_box.valueChanged.connect(lambda value: self._set("text_width", value))
-        form.addRow("Zeilenbreite", self.width_box)
+        form.addRow(tr("Line width"), self.width_box)
 
-        self.justify_box = QCheckBox("Blocksatz", page)
+        self.justify_box = QCheckBox(tr("Justify"), page)
         self.justify_box.setChecked(bool(self.settings["justify"]))
         self.justify_box.toggled.connect(lambda on: self._set("justify", on))
         form.addRow("", self.justify_box)
@@ -125,40 +127,67 @@ class SettingsDialog(QDialog):
         index = self.theme_box.findData(self.settings["theme"])
         self.theme_box.setCurrentIndex(max(0, index))
         self.theme_box.currentIndexChanged.connect(self._theme_changed)
-        form.addRow("Farbschema", self.theme_box)
+        form.addRow(tr("Colour scheme"), self.theme_box)
 
-        self.publisher_box = QCheckBox("Stylesheet des Verlags mitverwenden", page)
+        self.publisher_box = QCheckBox(tr("Use the publisher's stylesheet"), page)
         self.publisher_box.setChecked(bool(self.settings["use_publisher_css"]))
         self.publisher_box.setToolTip(
-            "Qt versteht nur einen Teil von CSS. Verlags-Stylesheets können damit\n"
-            "besser aussehen — oder deutlich schlechter. Im Zweifel ausgeschaltet lassen."
+            tr("Qt understands only part of CSS. Publisher stylesheets can make a book\n"
+               "look better — or considerably worse. When in doubt, leave this off.")
         )
         self.publisher_box.toggled.connect(lambda on: self._set("use_publisher_css", on))
-        form.addRow("EPUB", self.publisher_box)
+        form.addRow(tr("EPUB"), self.publisher_box)
 
         self.comic_box = QComboBox(page)
-        for key, label in (("width", "Breite anpassen"), ("height", "Höhe anpassen"),
-                           ("page", "Ganze Seite"), ("original", "Originalgröße")):
+        for key, label in (("width", tr("Fit width")), ("height", tr("Fit height")),
+                           ("page", tr("Whole page")), ("original", tr("Original size"))):
             self.comic_box.addItem(label, key)
         index = self.comic_box.findData(self.settings["comic_fit"])
         self.comic_box.setCurrentIndex(max(0, index))
         self.comic_box.currentIndexChanged.connect(
             lambda _index: self._set("comic_fit", self.comic_box.currentData())
         )
-        form.addRow("Comics", self.comic_box)
+        form.addRow(tr("Comics"), self.comic_box)
 
         self.recent_box = QSpinBox(page)
         self.recent_box.setRange(0, 100)
         self.recent_box.setValue(int(self.settings["recent_limit"]))
         self.recent_box.valueChanged.connect(lambda value: self._set("recent_limit", value))
-        form.addRow("Zuletzt geöffnet", self.recent_box)
+        form.addRow(tr("Recently opened"), self.recent_box)
+
+        self.language_box = QComboBox(page)
+        for code, _label in i18n.LANGUAGES:
+            self.language_box.addItem(i18n.language_label(code), code)
+        current = self.language_box.findData(self.settings["language"])
+        self.language_box.setCurrentIndex(max(0, current))
+        self.language_box.currentIndexChanged.connect(self._language_changed)
+        form.addRow(tr("Language"), self.language_box)
+
+        self.language_note = QLabel(
+            tr("The language takes effect after restarting OpenReader."), page)
+        self.language_note.setWordWrap(True)
+        # Only worth saying once the user has actually changed something.
+        self.language_note.setVisible(False)
+        form.addRow("", self.language_note)
 
         note = QLabel(
-            "Einstellungen und Lesefortschritt liegen unter:\n%s" % _data_location(), page)
+            tr("Settings and reading progress live in:\n%s") % _data_location(), page)
         note.setWordWrap(True)
         note.setTextInteractionFlags(Qt.TextSelectableByMouse)
         form.addRow("", note)
         return page
+
+    def _language_changed(self, _index: int) -> None:
+        """Store the language and say that it needs a restart.
+
+        Rebuilding every widget in place would be the nicer behaviour, but Qt
+        only re-reads translated text when a widget is created, so half the
+        window would change and half would not — worse than an honest note.
+        """
+
+        self.settings["language"] = self.language_box.currentData()
+        self.language_note.setVisible(True)
+        self.settingsChanged.emit()
 
     # ------------------------------------------------------------------
     def _set(self, key: str, value) -> None:
@@ -176,7 +205,7 @@ class SettingsDialog(QDialog):
 
     def _restore(self) -> None:
         answer = QMessageBox.question(
-            self, "Zurücksetzen", "Alle Anzeige-Einstellungen zurücksetzen?",
+            self, tr("Reset"), tr("Reset all display settings?"),
             QMessageBox.Yes | QMessageBox.No, QMessageBox.No,
         )
         if answer != QMessageBox.Yes:

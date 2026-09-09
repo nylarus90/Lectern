@@ -10,10 +10,6 @@ associations you choose yourself.
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
 ![Qt](https://img.shields.io/badge/Interface-Qt%20Widgets-41cd52)
 
-> **The interface is German only.** There is no translation layer yet, so every
-> menu, dialog and message is in German. Everything else — formats, file
-> handling, keyboard shortcuts — works the same regardless of language.
-
 ---
 
 ## Supported formats
@@ -55,6 +51,20 @@ Windows gets both options; everywhere else the single executable is enough.
 | Windows 10/11 (x64) | `OpenReader-*-windows-x86_64.exe` | Portable, double-click, nothing installed |
 | macOS (Apple Silicon) | `OpenReader-*-macos-arm64.zip` | Unpack, then right-click → "Open" (unsigned) |
 | Linux (x64, glibc ≥ 2.35) | `OpenReader-*-linux-x86_64` | `chmod +x` and run |
+
+### Language
+
+The interface speaks **English and German**. On first start it follows the
+system language: a German Windows gets German, everything else English. It can
+be fixed either way under **Settings → Reading → Language**, which takes effect
+after a restart.
+
+Qt's own dialog buttons follow along — a German window says "OK" and
+"Abbrechen", not "OK" and "Cancel" — because the build carries Qt's German
+translation alongside its own.
+
+Adding a language means translating one file, `openreader_de.ts`'s sibling, in
+Qt Linguist; `python build/make_translations.py` extracts and compiles it.
 
 ### Windows warns on first launch
 

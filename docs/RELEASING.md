@@ -16,14 +16,24 @@ with checksums. What follows is what has to be right *before* the tag.
 2. **Write the changelog entry.** Add a section to `CHANGELOG.md` with the new
    version and the release date. Date it the day the tag is pushed.
 
-3. **Run the tests and the linter.** Both must be clean.
+3. **Rebuild the translations.** New or changed strings otherwise ship
+   untranslated, and nothing else in the build notices.
+
+   ```bash
+   python build/make_translations.py
+   ```
+
+   It exits non-zero when a string has no German text, and verifies that the
+   compiled file really translates rather than merely existing.
+
+4. **Run the tests and the linter.** Both must be clean.
 
    ```bash
    python -m pytest
    python -m ruff check .
    ```
 
-4. **Build and try the artefacts by hand.** CI checks that they start; it does
+5. **Build and try the artefacts by hand.** CI checks that they start; it does
    not check that they are pleasant to use.
 
    ```bash
@@ -34,14 +44,14 @@ with checksums. What follows is what has to be right *before* the tag.
    Open a real book of each kind that changed, and on Windows run the installer
    once with associations on and uninstall it again.
 
-5. **Check the performance floor** if anything in the reader view or the format
+6. **Check the performance floor** if anything in the reader view or the format
    parsers changed. The tool exits non-zero as soon as a frame stutters.
 
    ```bash
    python tests/bench_reader.py --book "some-illustrated-book.epub"
    ```
 
-6. **Clean the working tree.** `git status` must be empty, and the build
+7. **Clean the working tree.** `git status` must be empty, and the build
    directories are ignored rather than committed.
 
 ## Tagging

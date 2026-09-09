@@ -17,6 +17,7 @@ from PySide6.QtCore import QObject, QThread, Signal
 
 from ..formats import load as load_book
 from ..formats.base import Book, LoadError
+from ..i18n import tr
 
 
 class _CancelledError(Exception):
@@ -38,7 +39,7 @@ class LoadWorker(QObject):
         try:
             book = load_book(self.path, self._report)
             self._raise_if_cancelled()
-            self.progress.emit(96, "Dokument wird zusammengesetzt…")
+            self.progress.emit(96, tr("Assembling document…"))
             html = assemble(book)
             self._raise_if_cancelled()
             self.finished.emit(book, html)
@@ -48,7 +49,7 @@ class LoadWorker(QObject):
             self.failed.emit(str(exc), "")
         except Exception as exc:  # noqa: BLE001 - a broken file must not kill the app
             self.failed.emit(
-                "Beim Öffnen ist ein unerwarteter Fehler aufgetreten:\n%s" % exc,
+                tr("An unexpected error occurred while opening:\n%s") % exc,
                 traceback.format_exc(),
             )
         finally:

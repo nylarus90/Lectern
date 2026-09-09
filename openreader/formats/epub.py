@@ -14,6 +14,7 @@ import zipfile
 from typing import Callable
 from xml.etree import ElementTree as ET
 
+from ..i18n import tr
 from ..render.html_clean import anchor_name, normalize_ex, strip_tags
 from .base import (
     Book,
@@ -59,7 +60,7 @@ class _Epub:
         try:
             self.zf = zipfile.ZipFile(path)
         except zipfile.BadZipFile as exc:
-            raise LoadError("Die Datei ist kein gültiges EPUB-Archiv.") from exc
+            raise LoadError(tr("The file is not a valid EPUB archive.")) from exc
         self.names = {name.lstrip("/"): name for name in self.zf.namelist()}
 
     def _resolve(self, path: str) -> str:
@@ -126,7 +127,7 @@ def _check_drm(epub: _Epub) -> None:
         # Unreadable manifest: assume the worst rather than show mojibake.
         if b"EncryptedData" in raw:
             raise DRMError(
-                "Dieses EPUB ist verschlüsselt und kann nicht geöffnet werden."
+                tr("This EPUB is encrypted and cannot be opened.")
             ) from None
         return
 
@@ -140,7 +141,7 @@ def _check_drm(epub: _Epub) -> None:
                 break
         if algorithm not in FONT_OBFUSCATION:
             raise DRMError(
-                "Dieses EPUB ist mit DRM geschützt und kann nicht geöffnet werden."
+                tr("This EPUB is protected by DRM and cannot be opened.")
             )
 
 
@@ -264,7 +265,7 @@ def _toc_from_nav(root: ET.Element, resolve: Callable[[str], str]) -> list[TocEn
 
 
 def load(path: str, progress: Callable[[int, str], None] = noop_progress) -> Book:
-    progress(2, "EPUB wird geöffnet…")
+    progress(2, tr("Opening EPUB…"))
     epub = _Epub(path)
     _check_drm(epub)
 
@@ -308,7 +309,7 @@ def load(path: str, progress: Callable[[int, str], None] = noop_progress) -> Boo
     spine_ids = [i for i in spine_ids if i in manifest]
 
     if not spine_ids:
-        raise LoadError("Das EPUB enthält keine lesbaren Kapitel (leerer Spine).")
+        raise LoadError(tr("The EPUB contains no readable chapters (empty spine)."))
 
     # Map absolute href -> chapter anchor prefix, needed for link rewriting.
     chapter_prefix: dict[str, str] = {}
@@ -328,7 +329,7 @@ def load(path: str, progress: Callable[[int, str], None] = noop_progress) -> Boo
         return "#" + anchor_name(prefix, fragment)
 
     # -- resources -------------------------------------------------------
-    progress(10, "Ressourcen werden gelesen…")
+    progress(10, tr("Reading resources…"))
     budget = ExpansionBudget()
     for _ident, (href, media, _props) in manifest.items():
         if media in TEXT_MEDIA or media == "application/x-dtbncx+xml":
@@ -355,11 +356,11 @@ def load(path: str, progress: Callable[[int, str], None] = noop_progress) -> Boo
     for index, ident in enumerate(spine_ids):
         href, _media, _props = manifest[ident]
         base_dir = posixpath.dirname(href)
-        progress(15 + int(70 * index / max(1, total)), "Kapitel %d/%d" % (index + 1, total))
+        progress(15 + int(70 * index / max(1, total)), tr("Chapter %d/%d") % (index + 1, total))
         try:
             raw = budget.read_zip(epub, href).decode("utf-8", "replace")
         except KeyError:
-            book.warnings.append("Kapitel fehlt im Archiv: %s" % href)
+            book.warnings.append(tr("Chapter missing from the archive: %s") % href)
             continue
 
         body, title, truncated = normalize_ex(
@@ -370,13 +371,12 @@ def load(path: str, progress: Callable[[int, str], None] = noop_progress) -> Boo
         )
         if truncated:
             book.warnings.append(
-                "Kapitel unvollständig, ein ausgeblendeter Bereich wurde nie "
-                "geschlossen: %s" % href
+                tr("Chapter incomplete: a hidden region was never closed: %s") % href
             )
         book.chapters.append(Chapter(ident="ch%d" % index, title=title, html=body))
 
     if not book.chapters:
-        raise LoadError("Kein Kapitel des EPUBs konnte gelesen werden.")
+        raise LoadError(tr("No chapter of the EPUB could be read."))
 
     # -- table of contents -----------------------------------------------
     progress(90, "Inhaltsverzeichnis…")

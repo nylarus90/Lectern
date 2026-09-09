@@ -76,6 +76,41 @@ def _unwanted(name: str) -> bool:
 analysis.binaries = TOC([entry for entry in analysis.binaries if not _unwanted(entry[0])])
 analysis.datas = TOC([entry for entry in analysis.datas if not _unwanted(entry[0])])
 
+
+def _translations():
+    """The application's own .qm plus the one Qt translation worth carrying.
+
+    Added *after* the filter above, deliberately: that filter drops everything
+    under a ``translations`` directory to keep Qt's 60 MB of languages out of a
+    36 MB download, and it would take these with it. What survives is our own
+    file and ``qtbase_de.qm`` — 220 KB, and without it a German window ends up
+    with English "OK" and "Cancel" in every standard dialog.
+    """
+
+    entries = []
+    own = os.path.join(ROOT, "openreader", "resources", "i18n")
+    if os.path.isdir(own):
+        for name in sorted(os.listdir(own)):
+            if name.endswith(".qm"):
+                entries.append((os.path.join("openreader", "resources", "i18n", name),
+                                os.path.join(own, name), "DATA"))
+
+    try:
+        import PySide6
+
+        qt_translations = os.path.join(os.path.dirname(PySide6.__file__), "translations")
+    except ImportError:
+        return entries
+    for name in ("qtbase_de.qm",):
+        source = os.path.join(qt_translations, name)
+        if os.path.exists(source):
+            entries.append((os.path.join("openreader", "resources", "i18n", name),
+                            source, "DATA"))
+    return entries
+
+
+analysis.datas = TOC(list(analysis.datas) + _translations())
+
 pyz = PYZ(analysis.pure, analysis.zipped_data, cipher=BLOCK_CIPHER)
 
 ICON = None

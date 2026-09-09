@@ -41,17 +41,17 @@ def test_detection_ignores_a_wrong_extension(samples, tmp_path):
 def test_empty_and_unknown_files_are_rejected(tmp_path):
     empty = tmp_path / "leer.bin"
     empty.write_bytes(b"")
-    with pytest.raises(LoadError, match="leer"):
+    with pytest.raises(LoadError, match="empty"):
         formats.detect(str(empty))
 
     binary = tmp_path / "rauschen.bin"
     binary.write_bytes(bytes(range(256)) * 8)
-    with pytest.raises(LoadError, match="nicht erkannt"):
+    with pytest.raises(LoadError, match="not recognised"):
         formats.detect(str(binary))
 
 
 def test_missing_file(tmp_path):
-    with pytest.raises(LoadError, match="existiert nicht"):
+    with pytest.raises(LoadError, match="does not exist"):
         formats.load(str(tmp_path / "gibtsnicht.epub"))
 
 
@@ -117,7 +117,7 @@ def test_cbr_without_a_tool_explains_itself(tmp_path, monkeypatch):
     fake.write_bytes(b"Rar!\x1a\x07\x01\x00" + b"\0" * 64)
     with pytest.raises(LoadError) as excinfo:
         comic.load(str(fake))
-    assert "unrar" in str(excinfo.value) and "Lizenz" in str(excinfo.value)
+    assert "unrar" in str(excinfo.value) and "licence" in str(excinfo.value)
 
 
 # --------------------------------------------------------------------------
@@ -179,7 +179,7 @@ def test_rtf_drops_metadata_groups():
 def test_rtf_rejects_non_rtf(tmp_path):
     path = tmp_path / "kein.rtf"
     path.write_text("nur text", encoding="utf-8")
-    with pytest.raises(LoadError, match="RTF-Signatur"):
+    with pytest.raises(LoadError, match="RTF signature"):
         plaintext.load_rtf(str(path))
 
 
@@ -196,7 +196,7 @@ def test_pdf_metadata_and_kind(samples):
 def test_pdf_rejects_non_pdf(tmp_path):
     path = tmp_path / "kein.pdf"
     path.write_bytes(b"not a pdf at all" * 4)
-    with pytest.raises(LoadError, match="PDF-Signatur"):
+    with pytest.raises(LoadError, match="PDF signature"):
         pdf.load(str(path))
 
 

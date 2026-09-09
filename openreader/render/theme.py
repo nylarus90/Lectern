@@ -42,10 +42,10 @@ THEMES: dict[str, Theme] = {
 #: Highlight colours offered in the annotation menu, tuned to stay readable on
 #: every theme rather than being pure saturated hues.
 HIGHLIGHT_COLOURS = {
-    "yellow": ("Gelb", "#f5e07a"),
-    "green": ("Grün", "#a8dda0"),
-    "blue": ("Blau", "#a3c9ea"),
-    "pink": ("Rosa", "#f0b0c8"),
+    "yellow": ("Yellow", "#f5e07a"),
+    "green": ("Green", "#a8dda0"),
+    "blue": ("Blue", "#a3c9ea"),
+    "pink": ("Pink", "#f0b0c8"),
     "orange": ("Orange", "#f3c08a"),
 }
 

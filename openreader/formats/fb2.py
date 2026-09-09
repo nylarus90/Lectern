@@ -14,6 +14,7 @@ from html import escape
 from typing import Callable
 from xml.etree import ElementTree as ET
 
+from ..i18n import tr
 from .base import (
     Book,
     BookKind,
@@ -204,16 +205,16 @@ def _metadata(root: ET.Element) -> tuple[Metadata, str]:
 
 
 def load(path: str, progress: Callable[[int, str], None] = noop_progress) -> Book:
-    progress(5, "FB2 wird gelesen…")
+    progress(5, tr("Reading FB2…"))
     data = _read_bytes(path)
     try:
         root = parse_xml(data)
     except ET.ParseError as exc:
-        raise LoadError("Die FB2-Datei ist kein gültiges XML: %s" % exc) from exc
+        raise LoadError(tr("The FB2 file is not valid XML: %s") % exc) from exc
 
     book = Book(path=path, kind=BookKind.TEXT)
 
-    progress(25, "Bilder werden dekodiert…")
+    progress(25, tr("Decoding images…"))
     for node in root.iter():
         if _local(node.tag) != "binary":
             continue
@@ -223,16 +224,16 @@ def load(path: str, progress: Callable[[int, str], None] = noop_progress) -> Boo
         try:
             book.resources[ident] = base64.b64decode(node.text)
         except (binascii.Error, ValueError):
-            book.warnings.append("Beschädigtes Bild übersprungen: %s" % ident)
+            book.warnings.append(tr("Skipped a damaged image: %s") % ident)
 
     book.meta, cover_key = _metadata(root)
     book.cover = book.resources.get(cover_key)
 
-    progress(55, "Text wird umgewandelt…")
+    progress(55, tr("Converting text…"))
     converter = _Converter(book)
     bodies = [n for n in root if _local(n.tag) == "body"]
     if not bodies:
-        raise LoadError("Die FB2-Datei enthält keinen <body>.")
+        raise LoadError(tr("The FB2 file contains no <body>."))
     for body in bodies:
         if body.get("name") == "notes":
             converter.emit('<hr /><h2 class="or-notes">Anmerkungen</h2>')

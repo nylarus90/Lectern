@@ -149,5 +149,5 @@ def test_unknown_compression_is_reported():
         def record(self, index):
             return b""
 
-    with pytest.raises(LoadError, match="Kompressionsverfahren"):
+    with pytest.raises(LoadError, match="compression method"):
         mobi._make_decompressor(FakeDB(), 999, 0, 0)

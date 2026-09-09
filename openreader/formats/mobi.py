@@ -15,6 +15,7 @@ import re
 import struct
 from typing import Callable
 
+from ..i18n import tr
 from ..render.html_clean import anchor_name, normalize_ex, strip_tags
 from .base import Book, BookKind, Chapter, DRMError, LoadError, Metadata, TocEntry, noop_progress
 
@@ -52,18 +53,18 @@ class PalmDB:
 
     def __init__(self, data: bytes) -> None:
         if len(data) < 78:
-            raise LoadError("Die Datei ist zu klein für ein Kindle-Buch.")
+            raise LoadError(tr("The file is too small to be a Kindle book."))
         self.data = data
         self.type = data[60:64]
         self.creator = data[64:68]
         count = struct.unpack_from(">H", data, 76)[0]
         if count == 0:
-            raise LoadError("Das Kindle-Archiv enthält keine Datensätze.")
+            raise LoadError(tr("The Kindle archive contains no records."))
         offsets = []
         for index in range(count):
             base = 78 + index * 8
             if base + 4 > len(data):
-                raise LoadError("Die Datensatz-Tabelle ist beschädigt.")
+                raise LoadError(tr("The record table is damaged."))
             offsets.append(struct.unpack_from(">I", data, base)[0])
         offsets.append(len(data))
         self._bounds = offsets
@@ -150,7 +151,7 @@ class HuffCdic:
 
     def __init__(self, huff: bytes, cdics: list[bytes]) -> None:
         if huff[0:4] != b"HUFF":
-            raise LoadError("Der HUFF-Datensatz des Buches ist beschädigt.")
+            raise LoadError(tr("The book's HUFF record is damaged."))
         off1, off2 = struct.unpack_from(">LL", huff, 8)
 
         self.dict1: list[tuple[int, int, int]] = []
@@ -159,7 +160,7 @@ class HuffCdic:
             terminal = value & 0x80
             maxcode = value >> 8
             if codelen == 0:
-                raise LoadError("Ungültige HUFF-Tabelle im Buch.")
+                raise LoadError(tr("Invalid HUFF table in the book."))
             self.dict1.append((codelen, terminal, ((maxcode + 1) << (32 - codelen)) - 1))
 
         dict2 = struct.unpack_from(">64L", huff, off2)
@@ -173,7 +174,7 @@ class HuffCdic:
 
     def _load_cdic(self, cdic: bytes) -> None:
         if cdic[0:4] != b"CDIC":
-            raise LoadError("Ein CDIC-Datensatz des Buches ist beschädigt.")
+            raise LoadError(tr("A CDIC record of the book is damaged."))
         phrases, bits = struct.unpack_from(">LL", cdic, 8)
         count = min(1 << bits, max(0, phrases - len(self.dictionary)))
         if count == 0:
@@ -188,7 +189,7 @@ class HuffCdic:
 
     def _decode(self, data: bytes, depth: int) -> bytes:
         if depth > 32:
-            raise LoadError("Die Kompression des Buches ist beschädigt (Rekursion).")
+            raise LoadError(tr("The book's compression is damaged (recursion)."))
         out = bytearray()
         bitsleft = len(data) * 8
         data = data + b"\0" * 8
@@ -307,19 +308,19 @@ def _make_decompressor(db, compression: int, huff_offset: int, huff_count: int):
         return palmdoc_decompress
     if compression == 17480:
         if not huff_offset or huff_offset >= db.count:
-            raise LoadError("Das Buch nutzt HUFF/CDIC, aber die Tabelle fehlt.")
+            raise LoadError(tr("The book uses HUFF/CDIC, but the table is missing."))
         # huff_count comes straight out of the file.  Taken at face value, a
         # forged 0x0FFFFFFF made this loop allocate gigabytes before failing, so
         # it is clamped to the records that actually exist.
         available = db.count - huff_offset
         if not 0 < huff_count <= available:
             raise LoadError(
-                "Die HUFF/CDIC-Tabelle der Datei ist widersprüchlich "
-                "(%d Einträge angekündigt, %d vorhanden)." % (huff_count, available)
+                tr("The file's HUFF/CDIC table is inconsistent "
+                   "(%d entries announced, %d present).") % (huff_count, available)
             )
         cdics = [db.record(huff_offset + i) for i in range(1, huff_count)]
         return HuffCdic(db.record(huff_offset), cdics).decompress
-    raise LoadError("Unbekanntes Kompressionsverfahren (%d) in der Kindle-Datei." % compression)
+    raise LoadError(tr("Unknown compression method (%d) in the Kindle file.") % compression)
 
 
 # --------------------------------------------------------------------------
@@ -334,26 +335,26 @@ _PAGEBREAK_RE = re.compile(rb"<\s*mbp:pagebreak[^>]*>", re.I)
 
 
 def load(path: str, progress: Callable[[int, str], None] = noop_progress) -> Book:
-    progress(2, "Kindle-Datei wird gelesen…")
+    progress(2, tr("Reading Kindle file…"))
     with open(path, "rb") as handle:
         raw = handle.read()
 
     db = PalmDB(raw)
     if db.type + db.creator not in (b"BOOKMOBI", b"TEXtREAd"):
-        raise LoadError("Das ist keine MOBI-/AZW-Datei (falsche PalmDB-Signatur).")
+        raise LoadError(tr("This is not a MOBI/AZW file (wrong PalmDB signature)."))
     return _load_container(path, db, progress, allow_boundary=True)
 
 
 def _load_container(path: str, db, progress, *, allow_boundary: bool) -> Book:
     record0 = db.record(0)
     if len(record0) < 16:
-        raise LoadError("Der Kopfdatensatz des Buches ist unvollständig.")
+        raise LoadError(tr("The book's header record is incomplete."))
 
     compression, _pad, text_length, text_records, _record_size, encryption = \
         struct.unpack_from(">HHIHHH", record0, 0)
     if encryption not in (0,):
         raise DRMError(
-            "Diese Kindle-Datei ist DRM-geschützt und kann nicht geöffnet werden."
+            tr("This Kindle file is protected by DRM and cannot be opened.")
         )
 
     book = Book(path=path, kind=BookKind.TEXT)
@@ -404,7 +405,7 @@ def _load_container(path: str, db, progress, *, allow_boundary: bool) -> Book:
                 inner = _load_container(
                     path, ShiftedDB(db, index), progress, allow_boundary=False
                 )
-                inner.warnings.append("Kombinierte MOBI/KF8-Datei: KF8-Teil gelesen.")
+                inner.warnings.append(tr("Combined MOBI/KF8 file: the KF8 part was read."))
                 return inner
 
     # -- metadata --------------------------------------------------------
@@ -424,7 +425,7 @@ def _load_container(path: str, db, progress, *, allow_boundary: bool) -> Book:
     book.meta = meta
 
     # -- text ------------------------------------------------------------
-    progress(20, "Text wird entpackt…")
+    progress(20, tr("Decompressing text…"))
     decompress = _make_decompressor(db, compression, huff_offset, huff_count)
     pieces = []
     for index in range(1, min(text_records, db.count - 1) + 1):
@@ -433,10 +434,10 @@ def _load_container(path: str, db, progress, *, allow_boundary: bool) -> Book:
     if text_length:
         text = text[:text_length]
     if not text.strip():
-        raise LoadError("Im Buch wurde kein lesbarer Text gefunden.")
+        raise LoadError(tr("No readable text was found in the book."))
 
     # -- resources -------------------------------------------------------
-    progress(60, "Bilder werden gelesen…")
+    progress(60, tr("Reading images…"))
     image_records: dict[int, str] = {}
     if first_resource and first_resource < db.count:
         for offset in range(db.count - first_resource):
@@ -453,7 +454,7 @@ def _load_container(path: str, db, progress, *, allow_boundary: bool) -> Book:
     if book.cover is None and image_records:
         book.cover = book.resources[image_records[min(image_records)]]
 
-    progress(75, "Text wird aufbereitet…")
+    progress(75, tr("Preparing text…"))
     _build_document(book, text, encoding, image_records, is_kf8=file_version >= 8)
     progress(100, "Fertig")
     return book
@@ -542,7 +543,7 @@ def _build_document(
     )
     if truncated:
         book.warnings.append(
-            "Das Buch ist unvollständig: ein ausgeblendeter Bereich wurde nie geschlossen."
+            tr("The book is incomplete: a hidden region was never closed.")
         )
     if not book.meta.title:
         book.meta.title = doc_title

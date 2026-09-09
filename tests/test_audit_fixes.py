@@ -70,14 +70,14 @@ class TestHiddenElementsDoNotSwallowContent:
                     data = data.replace(b"<body>", b'<body><div style="display:none">')
                 zout.writestr(item, data)
         book = load(target)
-        assert any("unvollständig" in warning for warning in book.warnings)
+        assert any("incomplete" in warning for warning in book.warnings)
 
 
 # -- F-03: resource exhaustion from a small file ----------------------------
 class TestExpansionBudget:
     def test_declared_size_is_rejected_before_reading(self):
         budget = ExpansionBudget(limit=1000)
-        with pytest.raises(LoadError, match="entpackt"):
+        with pytest.raises(LoadError, match="expands to more"):
             budget.check(5000, "bombe.png")
 
     def test_actual_size_is_caught_when_the_header_lied(self):
@@ -93,7 +93,7 @@ class TestExpansionBudget:
         with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as zf:
             for index in range(4):
                 zf.writestr("page%02d.png" % index, b"\0" * (200 * 1024 * 1024))
-        with pytest.raises(LoadError, match="entpackt"):
+        with pytest.raises(LoadError, match="expands to more"):
             comic.load(path)
 
     def test_a_normal_comic_still_opens(self, tmp_path):
@@ -113,7 +113,7 @@ class TestExpansionBudget:
             def record(self, index):
                 return b"\0" * 16
 
-        with pytest.raises(LoadError, match="widersprüchlich"):
+        with pytest.raises(LoadError, match="inconsistent"):
             _make_decompressor(FakeDb(), 17480, huff_offset=2, huff_count=0x0FFFFFFF)
 
 
@@ -228,13 +228,13 @@ class TestXmlEntitiesAreRefused:
         bomb = (b'<?xml version="1.0"?><!DOCTYPE lolz [\n'
                 b'<!ENTITY a "aaaaaaaaaa">\n<!ENTITY b "&a;&a;&a;&a;&a;">\n]>\n'
                 b'<FictionBook><body>&b;</body></FictionBook>')
-        with pytest.raises(LoadError, match="Entity"):
+        with pytest.raises(LoadError, match="entities"):
             parse_xml(bomb)
 
     def test_external_entity(self):
         xxe = (b'<?xml version="1.0"?><!DOCTYPE r ['
                b'<!ENTITY x SYSTEM "file:///etc/passwd">]><r>&x;</r>')
-        with pytest.raises(LoadError, match="Entity"):
+        with pytest.raises(LoadError, match="entities"):
             parse_xml(xxe)
 
     def test_ordinary_doctype_is_fine(self):

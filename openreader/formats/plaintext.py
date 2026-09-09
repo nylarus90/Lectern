@@ -13,6 +13,7 @@ import re
 from html import escape
 from typing import Callable
 
+from ..i18n import tr
 from ..render.html_clean import normalize_ex, strip_tags
 from .base import Book, BookKind, Chapter, LoadError, TocEntry, noop_progress
 
@@ -97,7 +98,7 @@ def looks_like_heading(block: str) -> bool:
 
 
 def load_txt(path: str, progress: Callable[[int, str], None] = noop_progress) -> Book:
-    progress(10, "Textdatei wird gelesen…")
+    progress(10, tr("Reading text file…"))
     text = read_text(path)
     book = Book(path=path, kind=BookKind.TEXT)
     book.meta.title = os.path.splitext(os.path.basename(path))[0]
@@ -135,7 +136,7 @@ def load_markdown(path: str, progress: Callable[[int, str], None] = noop_progres
 
     from PySide6.QtGui import QTextDocument
 
-    progress(10, "Markdown wird gelesen…")
+    progress(10, tr("Reading Markdown…"))
     text = read_text(path)
     document = QTextDocument()
     document.setMarkdown(text, QTextDocument.MarkdownDialectCommonMark)
@@ -150,7 +151,7 @@ def load_markdown(path: str, progress: Callable[[int, str], None] = noop_progres
 # HTML / XHTML
 # --------------------------------------------------------------------------
 def load_html(path: str, progress: Callable[[int, str], None] = noop_progress) -> Book:
-    progress(10, "HTML wird gelesen…")
+    progress(10, tr("Reading HTML…"))
     text = read_text(path)
     book = Book(path=path, kind=BookKind.TEXT)
     book.meta.title = os.path.splitext(os.path.basename(path))[0]
@@ -163,7 +164,7 @@ _H_RE = re.compile(r"<h([1-3])\b[^>]*>(.*?)</h\1>", re.I | re.S)
 def _finish_html_book(book: Book, html: str, *, base_dir: str, progress) -> Book:
     """Shared tail for HTML-ish sources: side-load images, build a TOC."""
 
-    progress(40, "Bilder werden geladen…")
+    progress(40, tr("Loading images…"))
 
     def resolve_src(src: str) -> str:
         if not src or not base_dir or src.startswith(("http://", "https://", "data:")):
@@ -203,7 +204,7 @@ def _finish_html_book(book: Book, html: str, *, base_dir: str, progress) -> Book
         toc.append(TocEntry(title, "#ch0__" + name))
     parts.append(html[last:])
 
-    progress(70, "Text wird aufbereitet…")
+    progress(70, tr("Preparing text…"))
     body, title, truncated = normalize_ex(
         "".join(parts),
         anchor_prefix="ch0",
@@ -214,7 +215,7 @@ def _finish_html_book(book: Book, html: str, *, base_dir: str, progress) -> Book
     )
     if truncated:
         book.warnings.append(
-            "Das Dokument ist unvollständig: ein ausgeblendeter Bereich wurde nie geschlossen."
+            tr("The document is incomplete: a hidden region was never closed.")
         )
     if title:
         book.meta.title = title
@@ -384,17 +385,17 @@ def rtf_to_html(source: str) -> tuple[str, str, str]:
 
 
 def load_rtf(path: str, progress: Callable[[int, str], None] = noop_progress) -> Book:
-    progress(10, "RTF wird gelesen…")
+    progress(10, tr("Reading RTF…"))
     source = read_text(path)
     if not source.lstrip().startswith("{\\rtf"):
-        raise LoadError("Die Datei beginnt nicht mit einer RTF-Signatur.")
+        raise LoadError(tr("The file does not begin with an RTF signature."))
     html, title, author = rtf_to_html(source)
     if not strip_tags(html):
-        raise LoadError("Aus der RTF-Datei konnte kein Text gewonnen werden.")
+        raise LoadError(tr("No text could be recovered from the RTF file."))
 
     book = Book(path=path, kind=BookKind.TEXT)
     book.meta.title = title or os.path.splitext(os.path.basename(path))[0]
     if author:
         book.meta.authors = [author]
-    progress(60, "Text wird aufbereitet…")
+    progress(60, tr("Preparing text…"))
     return _finish_html_book(book, html, base_dir="", progress=progress)

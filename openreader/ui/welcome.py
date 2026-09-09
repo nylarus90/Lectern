@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from ..i18n import tr
 from ..render import theme as theming
 from ..version import APP_NAME
 
@@ -49,14 +50,14 @@ class WelcomeView(QWidget):
         layout.addSpacing(12)
 
         buttons = QHBoxLayout()
-        self.open_button = QPushButton("Buch öffnen…", self)
+        self.open_button = QPushButton(tr("Open book…"), self)
         self.open_button.clicked.connect(self.browseRequested)
         buttons.addWidget(self.open_button)
         buttons.addStretch(1)
         layout.addLayout(buttons)
         layout.addSpacing(10)
 
-        self.recent_label = QLabel("Zuletzt gelesen", self)
+        self.recent_label = QLabel(tr("Recently read"), self)
         recent_font = self.recent_label.font()
         recent_font.setBold(True)
         self.recent_label.setFont(recent_font)
@@ -72,7 +73,7 @@ class WelcomeView(QWidget):
         layout.addWidget(self.list, 1)
 
         self.hint = QLabel(
-            "Noch nichts gelesen. Öffne ein Buch oder zieh eine Datei in dieses Fenster.",
+            tr("Nothing read yet. Open a book, or drag a file into this window."),
             self)
         self.hint.setWordWrap(True)
         layout.addWidget(self.hint)
@@ -89,7 +90,7 @@ class WelcomeView(QWidget):
                 entry.authors,
                 "%d %%" % entry.percent if entry.percent else "",
                 _ago(entry.last_opened),
-                "Datei fehlt" if missing else "",
+                tr("File missing") if missing else "",
             ) if part)
             item = QListWidgetItem("%s\n%s" % (title, detail))
             item.setData(Qt.UserRole, entry.path)
@@ -115,10 +116,10 @@ class WelcomeView(QWidget):
         if item is None:
             return
         menu = QMenu(self)
-        open_action = menu.addAction("Öffnen")
-        folder_action = menu.addAction("Ordner anzeigen")
+        open_action = menu.addAction(tr("Open"))
+        folder_action = menu.addAction(tr("Show folder"))
         menu.addSeparator()
-        forget_action = menu.addAction("Aus der Liste entfernen")
+        forget_action = menu.addAction(tr("Remove from the list"))
 
         chosen = menu.exec(self.list.mapToGlobal(point))
         path = str(item.data(Qt.UserRole))

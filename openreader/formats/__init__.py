@@ -12,6 +12,7 @@ import os
 import zipfile
 from typing import Callable, NamedTuple
 
+from ..i18n import tr
 from .base import Book, BookKind, LoadError, noop_progress
 
 
@@ -72,10 +73,10 @@ def detect(path: str) -> str:
         with open(path, "rb") as handle:
             head = handle.read(2048)
     except OSError as exc:
-        raise LoadError("Die Datei konnte nicht gelesen werden: %s" % exc) from exc
+        raise LoadError(tr("The file could not be read: %s") % exc) from exc
 
     if not head:
-        raise LoadError("Die Datei ist leer.")
+        raise LoadError(tr("The file is empty."))
 
     if head.startswith(b"%PDF-") or head[:1024].find(b"%PDF-") >= 0:
         return "pdf"
@@ -104,7 +105,7 @@ def detect(path: str) -> str:
         return "txt"
     except UnicodeDecodeError as exc:
         raise LoadError(
-            "Das Format der Datei wurde nicht erkannt.\n\nUnterstützt werden: %s"
+            tr("The file format was not recognised.\n\nSupported: %s")
             % ", ".join(sorted(EXTENSION_MAP))
         ) from exc
 
@@ -143,7 +144,7 @@ def load(path: str, progress: Callable[[int, str], None] = noop_progress) -> Boo
     """Detect the format of ``path`` and load it into a :class:`Book`."""
 
     if not os.path.isfile(path):
-        raise LoadError("Die Datei existiert nicht: %s" % path)
+        raise LoadError(tr("The file does not exist: %s") % path)
     key = detect(path)
     book = _loader(key)(path, progress)
     book.format_key = key
@@ -157,7 +158,7 @@ def dialog_filter() -> str:
     parts = ["Alle E-Books (%s)" % " ".join("*" + e for e in every)]
     parts += ["%s (%s)" % (fmt.label, " ".join("*" + e for e in fmt.extensions))
               for fmt in FORMATS]
-    parts.append("Alle Dateien (*)")
+    parts.append(tr("All files (*)"))
     return ";;".join(parts)
 
 

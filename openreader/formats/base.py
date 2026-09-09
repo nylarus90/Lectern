@@ -14,6 +14,8 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Callable, Iterable
 
+from ..i18n import tr
+
 
 class BookKind(str, Enum):
     """Determines which viewer widget the main window shows."""
@@ -158,9 +160,9 @@ class ExpansionBudget:
 
     def _fail(self, what: str) -> None:
         raise LoadError(
-            "Die Datei entpackt sich auf mehr als %d MB und wurde deshalb "
-            "abgelehnt (bei: %s).\n\nDas deutet auf eine beschädigte oder "
-            "absichtlich präparierte Datei hin." % (self.limit // (1024 * 1024), what)
+            tr("The file expands to more than %d MB and was refused (at: %s).\n\n"
+               "That points to a damaged or deliberately crafted file.")
+            % (self.limit // (1024 * 1024), what)
         )
 
     def check(self, declared: int, what: str) -> None:
@@ -229,8 +231,7 @@ def parse_xml(data: bytes | str) -> ET.Element:
     raw = data.encode("utf-8", "replace") if isinstance(data, str) else data
     if b"<!ENTITY" in _doctype_span(raw).upper():
         raise LoadError(
-            "Die Datei enthält XML-Entity-Definitionen und wurde abgelehnt. "
-            "Bücher brauchen diese nicht; sie dienen fast immer dazu, den "
-            "Arbeitsspeicher des Lesegeräts zu erschöpfen."
+            tr("The file declares XML entities and was refused. Books have no use for "
+               "these; they almost always serve to exhaust the reader's memory.")
         )
     return ET.fromstring(data)

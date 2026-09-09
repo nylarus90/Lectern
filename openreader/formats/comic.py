@@ -20,6 +20,7 @@ import tempfile
 import zipfile
 from typing import Callable
 
+from ..i18n import tr
 from .base import Book, BookKind, ExpansionBudget, LoadError, TocEntry, noop_progress
 
 IMAGE_EXT = {".jpg", ".jpeg", ".png", ".gif", ".webp", ".bmp", ".avif", ".jxl"}
@@ -40,7 +41,7 @@ def _is_image(name: str) -> bool:
 
 
 def load(path: str, progress: Callable[[int, str], None] = noop_progress) -> Book:
-    progress(5, "Comic-Archiv wird geöffnet…")
+    progress(5, tr("Opening comic archive…"))
     lowered = path.lower()
 
     if zipfile.is_zipfile(path):
@@ -53,7 +54,7 @@ def load(path: str, progress: Callable[[int, str], None] = noop_progress) -> Boo
         entries = _from_rar(path, progress)
 
     if not entries:
-        raise LoadError("Im Archiv wurden keine Bilder gefunden.")
+        raise LoadError(tr("The archive contains no images."))
 
     book = Book(path=path, kind=BookKind.COMIC)
     book.meta.title = os.path.splitext(os.path.basename(path))[0]
@@ -62,8 +63,8 @@ def load(path: str, progress: Callable[[int, str], None] = noop_progress) -> Boo
         book.resources[key] = data
         book.images.append(key)
     book.cover = entries[0][1]
-    book.toc = [TocEntry("Seite %d" % (i + 1), i) for i in range(len(book.images))]
-    progress(100, "Fertig")
+    book.toc = [TocEntry(tr("Page %d") % (i + 1), i) for i in range(len(book.images))]
+    progress(100, tr("Done"))
     return book
 
 
@@ -73,7 +74,7 @@ def _from_zip(path: str, progress) -> list[tuple[str, bytes]]:
         names = sorted((n for n in archive.namelist() if _is_image(n)), key=natural_key)
         out = []
         for index, name in enumerate(names):
-            progress(10 + int(85 * index / max(1, len(names))), "Seite %d" % (index + 1))
+            progress(10 + int(85 * index / max(1, len(names))), tr("Page %d") % (index + 1))
             out.append((name, budget.read_zip(archive, name)))
         return out
 
@@ -85,7 +86,7 @@ def _from_tar(path: str, progress) -> list[tuple[str, bytes]]:
                          key=lambda m: natural_key(m.name))
         out = []
         for index, member in enumerate(members):
-            progress(10 + int(85 * index / max(1, len(members))), "Seite %d" % (index + 1))
+            progress(10 + int(85 * index / max(1, len(members))), tr("Page %d") % (index + 1))
             budget.check(member.size, member.name)
             handle = archive.extractfile(member)
             if handle is not None:
@@ -100,7 +101,7 @@ def _from_sevenzip(path: str, progress) -> list[tuple[str, bytes]]:
         import py7zr
     except ImportError:
         return _extract_with_tool(path, progress, ("7z", "7za", "bsdtar"))
-    progress(10, "7z-Archiv wird entpackt…")
+    progress(10, tr("Extracting 7z archive…"))
     with py7zr.SevenZipFile(path) as archive:
         total = sum(info.uncompressed for info in archive.list() if _is_image(info.filename))
         ExpansionBudget().check(total, os.path.basename(path))
@@ -131,13 +132,12 @@ def _extract_with_tool(path: str, progress, candidates: tuple[str, ...]) -> list
     tool, executable = resolved
     if tool is None or executable is None:
         raise LoadError(
-            "Für dieses Archiv wird ein externes Entpackprogramm benötigt "
-            "(unrar, bsdtar oder 7z), das auf diesem System nicht gefunden wurde.\n\n"
-            "Grund: RAR5 lässt sich nicht frei entpacken, und die unrar-Lizenz "
-            "erlaubt es nicht, das Programm mitzuliefern."
+            tr("This archive needs an external extractor (unrar, bsdtar or 7z), and "
+               "none was found on this system.\n\nRAR5 cannot be extracted with "
+               "free software, and the unrar licence forbids shipping the tool.")
         )
 
-    progress(10, "Archiv wird mit %s entpackt…" % tool)
+    progress(10, tr("Extracting archive with %s…") % tool)
     with tempfile.TemporaryDirectory(prefix="openreader-") as workdir:
         # ``--`` everywhere, so an archive whose name begins with a dash is
         # read as a file name and not as another option.
@@ -150,10 +150,10 @@ def _extract_with_tool(path: str, progress, candidates: tuple[str, ...]) -> list
         try:
             result = subprocess.run(command, capture_output=True, timeout=300, check=False)
         except (OSError, subprocess.TimeoutExpired) as exc:
-            raise LoadError("Das Entpackprogramm %s ist fehlgeschlagen: %s" % (tool, exc)) from exc
+            raise LoadError(tr("The extractor %s failed: %s") % (tool, exc)) from exc
         if result.returncode != 0:
             detail = result.stderr.decode("utf-8", "replace").strip()[:400]
-            raise LoadError("%s konnte das Archiv nicht entpacken.\n%s" % (tool, detail))
+            raise LoadError(tr("%s could not extract the archive.\n%s") % (tool, detail))
 
         # Whether the external tool refuses "../" entries is its business, not
         # something we can rely on, so only files that really ended up inside
@@ -176,7 +176,7 @@ def _extract_with_tool(path: str, progress, candidates: tuple[str, ...]) -> list
         out = []
         budget = ExpansionBudget()
         for index, relative in enumerate(found):
-            progress(20 + int(75 * index / max(1, len(found))), "Seite %d" % (index + 1))
+            progress(20 + int(75 * index / max(1, len(found))), tr("Page %d") % (index + 1))
             full = os.path.join(safe_root, relative)
             budget.check(os.path.getsize(full), relative)
             with open(full, "rb") as handle:

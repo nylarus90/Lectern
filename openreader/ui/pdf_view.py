@@ -14,6 +14,7 @@ from PySide6.QtPdfWidgets import QPdfView
 from PySide6.QtWidgets import QWidget
 
 from ..formats.base import Book, LoadError, TocEntry
+from ..i18n import tr
 from ..render import theme as theming
 
 
@@ -49,9 +50,9 @@ class PdfView(QPdfView):
             # Recorded so the window knows to ask, rather than reporting a
             # dead end for a file that is perfectly readable with a password.
             self._needs_password = True
-            raise LoadError("Das PDF ist passwortgeschützt.")
+            raise LoadError(tr("The PDF is password protected."))
         if error != QPdfDocument.Error.None_:
-            raise LoadError("Das PDF konnte nicht geöffnet werden (%s)." % error.name)
+            raise LoadError(tr("The PDF could not be opened (%s).") % error.name)
         self.outlineReady.emit(self.outline())
         self._emit_position()
 
@@ -107,7 +108,7 @@ class PdfView(QPdfView):
         entries = walk(QModelIndex())
         if entries:
             return entries
-        return [TocEntry("Seite %d" % (i + 1), i) for i in range(min(self.page_count, 2000))]
+        return [TocEntry(tr("Page %d") % (i + 1), i) for i in range(min(self.page_count, 2000))]
 
     # -- navigation -------------------------------------------------------
     def go_to_page(self, page: int) -> None:

@@ -25,6 +25,7 @@ from PySide6.QtWidgets import (
 
 from .. import formats
 from ..formats.base import Book, BookKind, LoadError, file_id
+from ..i18n import tr
 from ..render import theme as theming
 from ..storage.db import Library
 from ..storage.settings import DEFAULTS, Settings
@@ -135,10 +136,10 @@ class MainWindow(QMainWindow):
         self.search_panel.resultChosen.connect(self.show_search_result)
         self.search_panel.closed.connect(lambda: self.tabs.setCurrentIndex(0))
 
-        self.tabs.addTab(self.toc_panel, "Inhalt")
-        self.tabs.addTab(self.bookmark_panel, "Lesezeichen")
-        self.tabs.addTab(self.annotation_panel, "Notizen")
-        self.tabs.addTab(self.search_panel, "Suche")
+        self.tabs.addTab(self.toc_panel, tr("Contents"))
+        self.tabs.addTab(self.bookmark_panel, tr("Bookmarks"))
+        self.tabs.addTab(self.annotation_panel, tr("Notes"))
+        self.tabs.addTab(self.search_panel, tr("Search"))
         self.sidebar.setWidget(self.tabs)
         self.addDockWidget(Qt.LeftDockWidgetArea, self.sidebar)
         self.sidebar.setVisible(bool(self.settings["sidebar_visible"]))
@@ -147,69 +148,69 @@ class MainWindow(QMainWindow):
         menubar = self.menuBar()
 
         # -- file --------------------------------------------------------
-        file_menu = menubar.addMenu("&Datei")
-        self.action_open = _action(self, "Öffnen…", QKeySequence.Open, self.open_dialog)
+        file_menu = menubar.addMenu(tr("&File"))
+        self.action_open = _action(self, tr("Open…"), QKeySequence.Open, self.open_dialog)
         file_menu.addAction(self.action_open)
-        self.recent_menu = QMenu("Zuletzt geöffnet", self)
+        self.recent_menu = QMenu(tr("Recently opened"), self)
         self.recent_menu.aboutToShow.connect(self._fill_recent_menu)
         file_menu.addMenu(self.recent_menu)
         file_menu.addSeparator()
-        self.action_close_book = _action(self, "Buch schließen", QKeySequence.Close,
+        self.action_close_book = _action(self, tr("Close book"), QKeySequence.Close,
                                          self.close_book)
         file_menu.addAction(self.action_close_book)
-        self.action_export = _action(self, "Anmerkungen exportieren…", None,
+        self.action_export = _action(self, tr("Export annotations…"), None,
                                      self.export_annotations)
         file_menu.addAction(self.action_export)
         file_menu.addSeparator()
-        file_menu.addAction(_action(self, "Beenden", QKeySequence.Quit, self.close))
+        file_menu.addAction(_action(self, tr("Quit"), QKeySequence.Quit, self.close))
 
         # -- navigation ---------------------------------------------------
-        nav_menu = menubar.addMenu("&Navigation")
-        self.action_next = _action(self, "Nächste Seite", QKeySequence(Qt.Key_PageDown),
+        nav_menu = menubar.addMenu(tr("&Navigation"))
+        self.action_next = _action(self, tr("Next page"), QKeySequence(Qt.Key_PageDown),
                                    self.next_page)
-        self.action_previous = _action(self, "Vorherige Seite", QKeySequence(Qt.Key_PageUp),
+        self.action_previous = _action(self, tr("Previous page"), QKeySequence(Qt.Key_PageUp),
                                        self.previous_page)
         nav_menu.addAction(self.action_next)
         nav_menu.addAction(self.action_previous)
         nav_menu.addSeparator()
-        nav_menu.addAction(_action(self, "Anfang", QKeySequence(Qt.CTRL | Qt.Key_Home),
+        nav_menu.addAction(_action(self, tr("Beginning"), QKeySequence(Qt.CTRL | Qt.Key_Home),
                                    self.go_to_start))
-        nav_menu.addAction(_action(self, "Ende", QKeySequence(Qt.CTRL | Qt.Key_End),
+        nav_menu.addAction(_action(self, tr("End"), QKeySequence(Qt.CTRL | Qt.Key_End),
                                    self.go_to_end))
         nav_menu.addSeparator()
-        self.action_goto = _action(self, "Gehe zu…", QKeySequence(Qt.CTRL | Qt.Key_G),
+        self.action_goto = _action(self, tr("Go to…"), QKeySequence(Qt.CTRL | Qt.Key_G),
                                    self.go_to_dialog)
         nav_menu.addAction(self.action_goto)
-        self.action_search = _action(self, "Suchen…", QKeySequence.Find, self.focus_search)
+        self.action_search = _action(self, tr("Find…"), QKeySequence.Find, self.focus_search)
         nav_menu.addAction(self.action_search)
-        self.action_next_match = _action(self, "Nächster Treffer",
+        self.action_next_match = _action(self, tr("Next match"),
                                          QKeySequence.FindNext, self.next_match)
-        self.action_previous_match = _action(self, "Vorheriger Treffer",
+        self.action_previous_match = _action(self, tr("Previous match"),
                                              QKeySequence.FindPrevious, self.previous_match)
         nav_menu.addAction(self.action_next_match)
         nav_menu.addAction(self.action_previous_match)
 
         # -- annotations ---------------------------------------------------
-        annotate_menu = menubar.addMenu("&Anmerkungen")
-        self.action_bookmark = _action(self, "Lesezeichen setzen",
+        annotate_menu = menubar.addMenu(tr("&Annotations"))
+        self.action_bookmark = _action(self, tr("Add bookmark"),
                                        QKeySequence(Qt.CTRL | Qt.Key_B), self.add_bookmark)
         annotate_menu.addAction(self.action_bookmark)
-        self.action_highlight = _action(self, "Auswahl markieren",
+        self.action_highlight = _action(self, tr("Highlight selection"),
                                         QKeySequence(Qt.CTRL | Qt.Key_H), self.add_highlight)
         annotate_menu.addAction(self.action_highlight)
-        colour_menu = annotate_menu.addMenu("Markieren in Farbe")
+        colour_menu = annotate_menu.addMenu(tr("Highlight in colour"))
         for key, (label, _hexcolour) in theming.HIGHLIGHT_COLOURS.items():
             colour_menu.addAction(
                 _action(self, label, None, lambda _checked=False, k=key: self.add_highlight(k))
             )
         annotate_menu.addSeparator()
-        self.action_copy = _action(self, "Auswahl kopieren", QKeySequence.Copy,
+        self.action_copy = _action(self, tr("Copy selection"), QKeySequence.Copy,
                                    lambda: self.reader.copy_selection())
         annotate_menu.addAction(self.action_copy)
 
         # -- view ----------------------------------------------------------
-        view_menu = menubar.addMenu("&Ansicht")
-        theme_menu = view_menu.addMenu("Farbschema")
+        view_menu = menubar.addMenu(tr("&View"))
+        theme_menu = view_menu.addMenu(tr("Colour scheme"))
         self._theme_group = QActionGroup(self)
         self._theme_group.setExclusive(True)
         for key in theming.THEMES:
@@ -222,33 +223,33 @@ class MainWindow(QMainWindow):
             theme_menu.addAction(action)
 
         view_menu.addSeparator()
-        view_menu.addAction(_action(self, "Vergrößern", QKeySequence.ZoomIn,
+        view_menu.addAction(_action(self, tr("Zoom in"), QKeySequence.ZoomIn,
                                     lambda: self.zoom_in()))
-        view_menu.addAction(_action(self, "Verkleinern", QKeySequence.ZoomOut,
+        view_menu.addAction(_action(self, tr("Zoom out"), QKeySequence.ZoomOut,
                                     lambda: self.zoom_out()))
-        view_menu.addAction(_action(self, "Zoom zurücksetzen",
+        view_menu.addAction(_action(self, tr("Reset zoom"),
                                     QKeySequence(Qt.CTRL | Qt.Key_0), self.zoom_reset))
         view_menu.addSeparator()
 
-        self.action_sidebar = _action(self, "Seitenleiste", QKeySequence(Qt.Key_F9),
+        self.action_sidebar = _action(self, tr("Sidebar"), QKeySequence(Qt.Key_F9),
                                       self.toggle_sidebar)
         self.action_sidebar.setCheckable(True)
         self.action_sidebar.setChecked(self.sidebar.isVisible())
         view_menu.addAction(self.action_sidebar)
 
-        self.action_fullscreen = _action(self, "Vollbild", QKeySequence(Qt.Key_F11),
+        self.action_fullscreen = _action(self, tr("Full screen"), QKeySequence(Qt.Key_F11),
                                          self.toggle_fullscreen)
         self.action_fullscreen.setCheckable(True)
         view_menu.addAction(self.action_fullscreen)
         view_menu.addSeparator()
-        view_menu.addAction(_action(self, "Einstellungen…",
+        view_menu.addAction(_action(self, tr("Settings…"),
                                     QKeySequence(Qt.CTRL | Qt.Key_Comma), self.open_settings))
 
         # -- help ----------------------------------------------------------
-        help_menu = menubar.addMenu("&Hilfe")
-        help_menu.addAction(_action(self, "Tastenkürzel", QKeySequence.HelpContents,
+        help_menu = menubar.addMenu(tr("&Help"))
+        help_menu.addAction(_action(self, tr("Keyboard shortcuts"), QKeySequence.HelpContents,
                                     self.show_shortcuts))
-        help_menu.addAction(_action(self, "Über %s" % APP_NAME, None, self.show_about))
+        help_menu.addAction(_action(self, tr("About %s") % APP_NAME, None, self.show_about))
 
         # -- toolbar --------------------------------------------------------
         toolbar = QToolBar("Werkzeugleiste", self)
@@ -305,7 +306,7 @@ class MainWindow(QMainWindow):
     def open_dialog(self) -> None:
         start = os.path.dirname(self.book.path) if self.book else ""
         path, _chosen = QFileDialog.getOpenFileName(
-            self, "E-Book öffnen", start, formats.dialog_filter()
+            self, tr("Open e-book"), start, formats.dialog_filter()
         )
         if path:
             self.open_path(path)
@@ -316,7 +317,7 @@ class MainWindow(QMainWindow):
         self._persist_position()
         self.progress_bar.setVisible(True)
         self.progress_bar.setValue(0)
-        self.status_title.setText("Öffne %s…" % os.path.basename(path))
+        self.status_title.setText(tr("Opening %s…") % os.path.basename(path))
         self.loader.start(path)
 
     def _on_load_progress(self, percent: int, message: str) -> None:
@@ -409,16 +410,16 @@ class MainWindow(QMainWindow):
                 if not self.pdf.needs_password():
                     self._on_load_failed(str(exc), "")
                     return False
-            prompt = ("Dieses PDF ist passwortgeschützt.\nPasswort:" if attempt == 0
-                      else "Passwort falsch. Bitte erneut versuchen:")
+            prompt = (tr("This PDF is password protected.\nPassword:") if attempt == 0
+                      else tr("Wrong password. Please try again:"))
             password, accepted = QInputDialog.getText(
-                self, "Passwort erforderlich", prompt, QLineEdit.Password
+                self, tr("Password required"), prompt, QLineEdit.Password
             )
             if not accepted:
                 self.progress_bar.setVisible(False)
                 self.status_title.setText("")
                 return False
-        self._on_load_failed("Das PDF konnte mit diesem Passwort nicht geöffnet werden.", "")
+        self._on_load_failed(tr("The PDF could not be opened with this password."), "")
         return False
 
     def _show_comic(self, book: Book, state) -> bool:
@@ -483,7 +484,7 @@ class MainWindow(QMainWindow):
         box.setIcon(QMessageBox.Warning)
         # Carries file names and parser output, so it must not read markup.
         box.setTextFormat(Qt.PlainText)
-        box.setWindowTitle("Buch konnte nicht geöffnet werden")
+        box.setWindowTitle(tr("The book could not be opened"))
         box.setText(message)
         if detail:
             box.setDetailedText(detail)
@@ -563,14 +564,14 @@ class MainWindow(QMainWindow):
         if self.active_view in (self.pdf, self.comic):
             total = self.active_view.page_count
             page, ok = QInputDialog.getInt(
-                self, "Gehe zu Seite", "Seite (1–%d):" % total,
+                self, tr("Go to page"), tr("Page (1–%d):") % total,
                 self.active_view.current_page, 1, total,
             )
             if ok:
                 self.active_view.go_to_page(page - 1)
         elif self.is_text_book:
             percent, ok = QInputDialog.getInt(
-                self, "Gehe zu Position", "Position im Buch (%):", 0, 0, 100
+                self, "Gehe zu Position", tr("Position in the book (%):"), 0, 0, 100
             )
             if ok:
                 total = self.reader.document().characterCount()
@@ -582,14 +583,14 @@ class MainWindow(QMainWindow):
     def _on_text_position(self, position: int, total: int) -> None:
         percent = int(100 * position / total) if total else 0
         self.status_position.setText(
-            "Seite %d/%d · %d %%" % (self.reader.current_page, self.reader.page_count, percent)
+            tr("Page %d/%d · %d %%") % (self.reader.current_page, self.reader.page_count, percent)
         )
         if self.book:
             self.status_title.setText(self._title_line())
         self._sync_toc_to_position(position)
 
     def _on_page_position(self, page: int, total: int) -> None:
-        self.status_position.setText("Seite %d/%d · %d %%"
+        self.status_position.setText(tr("Page %d/%d · %d %%")
                                      % (page, total, int(100 * page / total) if total else 0))
         if self.book:
             self.status_title.setText(self._title_line())
@@ -633,17 +634,17 @@ class MainWindow(QMainWindow):
             return
         self._storage_warned = True
         self.status_title.setText(
-            "Leseposition kann nicht gespeichert werden — Bibliothek nicht beschreibbar."
+            tr("Reading position cannot be saved — the library is not writable.")
         )
         box = QMessageBox(self)
         box.setIcon(QMessageBox.Warning)
         box.setTextFormat(Qt.PlainText)
-        box.setWindowTitle("Speichern nicht möglich")
+        box.setWindowTitle(tr("Cannot save"))
         box.setText(
-            "Die Leseposition lässt sich nicht speichern.\n\n"
-            "Die Bibliotheksdatei ist gesperrt oder schreibgeschützt:\n%s\n\n"
-            "Das Lesen funktioniert weiter, aber Positionen, Lesezeichen und "
-            "Markierungen dieser Sitzung gehen verloren." % self.library.path
+            tr("The reading position cannot be saved.\n\n"
+               "The library file is locked or read-only:\n%s\n\n"
+               "Reading still works, but positions, bookmarks and highlights "
+               "from this session will be lost.") % self.library.path
         )
         box.exec()
 
@@ -658,17 +659,17 @@ class MainWindow(QMainWindow):
             suggestion = self.reader.context_around(position, position + 60, 0)[:60]
         elif self.active_view in (self.pdf, self.comic):
             position = self.active_view.current_page - 1
-            suggestion = "Seite %d" % self.active_view.current_page
+            suggestion = tr("Page %d") % self.active_view.current_page
         else:
             return
 
-        label, ok = QInputDialog.getText(self, "Lesezeichen", "Beschriftung:",
+        label, ok = QInputDialog.getText(self, tr("Bookmarks"), tr("Label:"),
                                          text=suggestion.strip())
         if not ok:
             return
         self.library.add_bookmark(self.book_id, position, label.strip())
         self.bookmark_panel.populate(self.library.bookmarks(self.book_id))
-        self.statusBar().showMessage("Lesezeichen gesetzt.", 2500)
+        self.statusBar().showMessage(tr("Bookmark added."), 2500)
 
     def _remove_bookmark(self, ident: int) -> None:
         self.library.remove_bookmark(ident)
@@ -679,12 +680,12 @@ class MainWindow(QMainWindow):
             return
         start, end, text = self.reader.selected_range()
         if not text.strip():
-            self.statusBar().showMessage("Erst Text auswählen, dann markieren.", 3000)
+            self.statusBar().showMessage(tr("Select text first, then highlight."), 3000)
             return
         excerpt = text.replace(" ", "\n")
         self.library.add_highlight(self.book_id, start, end, colour, excerpt)
         self._reload_highlights()
-        self.statusBar().showMessage("Markierung gespeichert.", 2500)
+        self.statusBar().showMessage(tr("Highlight saved."), 2500)
 
     def _remove_highlight(self, ident: int) -> None:
         self.library.remove_highlight(ident)
@@ -719,7 +720,7 @@ class MainWindow(QMainWindow):
             _safe_filename(self.book.display_title) + " — Notizen.md",
         )
         path, _chosen = QFileDialog.getSaveFileName(
-            self, "Anmerkungen exportieren", suggestion, "Markdown (*.md);;Alle Dateien (*)"
+            self, tr("Export annotations"), suggestion, tr("Markdown (*.md);;All files (*)")
         )
         if not path:
             return
@@ -727,9 +728,9 @@ class MainWindow(QMainWindow):
             with open(path, "w", encoding="utf-8") as handle:
                 handle.write(markdown)
         except OSError as exc:
-            QMessageBox.warning(self, "Export fehlgeschlagen", str(exc))
+            QMessageBox.warning(self, tr("Export failed"), str(exc))
             return
-        self.statusBar().showMessage("Anmerkungen gespeichert: %s" % path, 5000)
+        self.statusBar().showMessage(tr("Annotations saved: %s") % path, 5000)
 
     # ------------------------------------------------------------------
     # Search
@@ -746,7 +747,7 @@ class MainWindow(QMainWindow):
             snippets = []
             for index in range(min(count, 500)):
                 page, text = self.pdf.match_context(index)
-                snippets.append("S. %d — %s" % (page + 1, text))
+                snippets.append(tr("p. %d — %s") % (page + 1, text))
             self._search_matches = [(i, i) for i in range(count)]
             self.search_panel.show_results(snippets, needle)
             self._search_index = -1
@@ -828,7 +829,7 @@ class MainWindow(QMainWindow):
     def zoom_reset(self) -> None:
         if self.active_view is self.pdf:
             self.pdf.set_zoom_mode("width")
-            self.statusBar().showMessage("Zoom: an Breite angepasst", 1800)
+            self.statusBar().showMessage(tr("Zoom: fit to width"), 1800)
         else:
             self.set_font_size(DEFAULTS["font_size"])
 
@@ -843,7 +844,7 @@ class MainWindow(QMainWindow):
         if self.active_view is self.pdf:
             self.pdf.zoom_by(1.25 if direction > 0 else 1 / 1.25)
             self.statusBar().showMessage(
-                "Zoom: %d %%" % round(self.pdf.zoomFactor() * 100), 1800)
+                tr("Zoom: %d %%") % round(self.pdf.zoomFactor() * 100), 1800)
         else:
             self.change_font_size(direction)
 
@@ -853,7 +854,7 @@ class MainWindow(QMainWindow):
     def set_font_size(self, size: int) -> None:
         self.settings["font_size"] = max(8, min(48, size))
         self.reader.restyle()
-        self.statusBar().showMessage("Schriftgröße: %d pt" % self.settings["font_size"], 1800)
+        self.statusBar().showMessage(tr("Font size: %d pt") % self.settings["font_size"], 1800)
 
     def toggle_sidebar(self) -> None:
         visible = not self.sidebar.isVisible()
@@ -892,7 +893,7 @@ class MainWindow(QMainWindow):
         self.recent_menu.clear()
         entries = self.library.recent(int(self.settings["recent_limit"]))
         if not entries:
-            action = self.recent_menu.addAction("(noch nichts geöffnet)")
+            action = self.recent_menu.addAction(tr("(nothing opened yet)"))
             action.setEnabled(False)
             return
         for entry in entries:
@@ -901,13 +902,13 @@ class MainWindow(QMainWindow):
             action.setToolTip(entry.path)
             action.triggered.connect(lambda _checked=False, p=entry.path: self.open_path(p))
         self.recent_menu.addSeparator()
-        self.recent_menu.addAction("Liste leeren", self._clear_recent)
+        self.recent_menu.addAction(tr("Clear list"), self._clear_recent)
 
     def _clear_recent(self) -> None:
         answer = QMessageBox.question(
-            self, "Liste leeren",
-            "Alle zuletzt geöffneten Bücher entfernen?\n\n"
-            "Lesepositionen, Lesezeichen und Markierungen gehen dabei verloren.",
+            self, tr("Clear list"),
+            tr("Remove all recently opened books?\n\n"
+               "Reading positions, bookmarks and highlights will be lost."),
             QMessageBox.Yes | QMessageBox.No, QMessageBox.No,
         )
         if answer == QMessageBox.Yes:
@@ -921,24 +922,24 @@ class MainWindow(QMainWindow):
         # must never interpret the address as markup.  Qt's AutoText would let a
         # crafted link disguise itself as something else.
         box.setTextFormat(Qt.PlainText)
-        box.setWindowTitle("Link öffnen")
-        box.setText("Diesen Link im Browser öffnen?\n\n%s" % target)
+        box.setWindowTitle(tr("Open link"))
+        box.setText(tr("Open this link in the browser?\n\n%s") % target)
         box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
         box.setDefaultButton(QMessageBox.No)
         if box.exec() == QMessageBox.Yes:
             QDesktopServices.openUrl(QUrl(target))
 
     def show_shortcuts(self) -> None:
-        QMessageBox.information(self, "Tastenkürzel", SHORTCUT_HELP)
+        QMessageBox.information(self, tr("Keyboard shortcuts"), shortcut_help())
 
     def show_about(self) -> None:
         QMessageBox.about(
-            self, "Über %s" % APP_NAME,
-            "<h3>%s %s</h3>"
-            "<p>Ein freier E-Book-Reader für EPUB, Kindle-Formate, FB2, PDF, "
-            "Comics, Text, Markdown, HTML und RTF.</p>"
-            "<p>Lizenz: GNU GPL v3 oder später.<br>"
-            "Oberfläche: Qt (PySide6, LGPL v3).</p>" % (APP_NAME, __version__),
+            self, tr("About %s") % APP_NAME,
+            tr("<h3>%s %s</h3>"
+               "<p>A free e-book reader for EPUB, Kindle formats, FB2, PDF, "
+               "comics, text, Markdown, HTML and RTF.</p>"
+               "<p>Licence: GNU GPL v3 or later.<br>"
+               "Interface: Qt (PySide6, LGPL v3).</p>") % (APP_NAME, __version__),
         )
 
     def _update_actions(self) -> None:
@@ -990,34 +991,44 @@ class MainWindow(QMainWindow):
         super().closeEvent(event)
 
 
-SHORTCUT_HELP = """\
-Lesen
-    Leertaste / Bild ab / →      Nächste Seite
-    Rücktaste / Bild auf / ←     Vorherige Seite
-    Strg+Pos1 / Strg+Ende        Anfang / Ende
-    Strg+G                       Gehe zu Seite oder Position
+def shortcut_help() -> str:
+    """The keyboard reference, translated when it is asked for.
 
-Suchen
-    Strg+F                       Suche öffnen
-    F3 / Umschalt+F3             Nächster / vorheriger Treffer
-    Esc                          Suche beenden, Vollbild verlassen
+    A function rather than a constant on purpose: a module-level ``tr()`` runs
+    at import time, before the translator is installed, and would freeze the
+    English text into the module for the life of the process.
+    """
 
-Anmerkungen
-    Strg+B                       Lesezeichen setzen
-    Strg+H                       Auswahl markieren
-    Strg+C                       Auswahl kopieren
+    # No backslash continuation after the opening quotes: Python would drop the
+    # first newline while lupdate keeps it, and the two strings would then no
+    # longer be the same one.
+    return tr("""Reading
+    Space / Page Down / →        Next page
+    Backspace / Page Up / ←      Previous page
+    Ctrl+Home / Ctrl+End         Beginning / end
+    Ctrl+G                       Go to page or position
 
-Ansicht
-    Strg++ / Strg+−              Schrift größer / kleiner
-    Strg+0                       Schriftgröße zurücksetzen
-    F9                           Seitenleiste ein-/ausblenden
-    F11                          Vollbild
-    Strg+,                       Einstellungen
+Searching
+    Ctrl+F                       Open search
+    F3 / Shift+F3                Next / previous match
+    Esc                          Leave search, leave full screen
 
-Dateien
-    Strg+O                       Buch öffnen
-    Strg+W                       Buch schließen
-"""
+Annotations
+    Ctrl+B                       Add bookmark
+    Ctrl+H                       Highlight selection
+    Ctrl+C                       Copy selection
+
+View
+    Ctrl++ / Ctrl+−              Larger / smaller type
+    Ctrl+0                       Reset font size
+    F9                           Show/hide the sidebar
+    F11                          Full screen
+    Ctrl+,                       Settings
+
+Files
+    Ctrl+O                       Open book
+    Ctrl+W                       Close book
+""")
 
 
 def _walk_toc(entries):
@@ -1037,4 +1048,4 @@ def _action(parent, text: str, shortcut, slot) -> QAction:
 
 def _safe_filename(name: str) -> str:
     keep = "".join(ch if ch.isalnum() or ch in " -_." else "_" for ch in name)
-    return keep.strip()[:80] or "Notizen"
+    return keep.strip()[:80] or tr("Notes")

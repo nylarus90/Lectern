@@ -90,7 +90,7 @@ def _restrict_windows_directory(path: str) -> None:
         except (OSError, subprocess.SubprocessError):
             return
     with contextlib.suppress(OSError), open(marker, "w", encoding="utf-8") as handle:
-        handle.write("Zugriffsrechte wurden gesetzt. Diese Datei nicht löschen.\n")
+        handle.write("Permissions have been set. Do not delete this file.\n")
 
 
 def secure_file(path: str) -> None:

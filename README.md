@@ -1,338 +1,343 @@
 # OpenReader
 
-Ein freier E-Book-Reader — keine Laufzeitumgebung, kein Browser, keine
-Abhängigkeiten. Als **portable Einzeldatei** zum Herunterladen und Starten,
-für Windows wahlweise als **Installer** mit frei wählbaren Dateiverknüpfungen.
+[Deutsch](README.de.md) · **English**
 
-![Lizenz](https://img.shields.io/badge/Lizenz-GPL--3.0--or--later-blue)
+A free e-book reader — no runtime, no browser, no dependencies. A **portable
+single file** you download and run, or, on Windows, an **installer** with file
+associations you choose yourself.
+
+![License](https://img.shields.io/badge/License-GPL--3.0--or--later-blue)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
-![Qt](https://img.shields.io/badge/Oberfl%C3%A4che-Qt%20Widgets-41cd52)
+![Qt](https://img.shields.io/badge/Interface-Qt%20Widgets-41cd52)
+
+> **The interface is German only.** There is no translation layer yet, so every
+> menu, dialog and message is in German. Everything else — formats, file
+> handling, keyboard shortcuts — works the same regardless of language.
 
 ---
 
-## Unterstützte Formate
+## Supported formats
 
-| Format | Dateiendungen | Umfang |
+| Format | Extensions | What is handled |
 |---|---|---|
-| **EPUB 2 / EPUB 3** | `.epub` | Spine, NCX- und Nav-Inhaltsverzeichnis, Cover, Bilder, interne Links, Metadaten inkl. Reihe |
-| **Kindle KF7** | `.mobi` `.azw` `.prc` `.pdb` | PalmDOC- und HUFF/CDIC-Dekompression, EXTH-Metadaten, `recindex`-Bilder, `filepos`-Links |
-| **Kindle KF8** | `.azw3` `.azw` | Haupt-Flow, `kindle:embed:`-Bilder, kombinierte MOBI/KF8-Dateien |
-| **FictionBook** | `.fb2` `.fb2.zip` `.fbz` | Verschachtelte Abschnitte, Gedichte, Zitate, eingebettete Bilder |
-| **PDF** | `.pdf` | Natives Rendering über Qt PDF, Gliederung, Volltextsuche, Zoom |
-| **Comics** | `.cbz` `.cbt` `.cb7` `.cba` `.cbr` | Natürliche Seitensortierung, Anpassungsmodi |
-| **Text** | `.txt` `.log` | Kodierungserkennung, automatische Kapitelerkennung |
+| **EPUB 2 / EPUB 3** | `.epub` | Spine, NCX and nav table of contents, cover, images, internal links, metadata including series |
+| **Kindle KF7** | `.mobi` `.azw` `.prc` `.pdb` | PalmDOC and HUFF/CDIC decompression, EXTH metadata, `recindex` images, `filepos` links |
+| **Kindle KF8** | `.azw3` `.azw` | Main flow, `kindle:embed:` images, combined MOBI/KF8 files |
+| **FictionBook** | `.fb2` `.fb2.zip` `.fbz` | Nested sections, poems, quotes, embedded images |
+| **PDF** | `.pdf` | Native rendering through Qt PDF, outline, full-text search, zoom |
+| **Comics** | `.cbz` `.cbt` `.cb7` `.cba` `.cbr` | Natural page ordering, fit modes |
+| **Text** | `.txt` `.log` | Encoding detection, automatic chapter detection |
 | **Markdown** | `.md` `.markdown` | CommonMark |
-| **HTML** | `.html` `.htm` `.xhtml` | Mit Bildern aus dem Nachbarordner |
-| **Rich Text** | `.rtf` | Formatierung, Kodierungen, Unicode-Escapes |
+| **HTML** | `.html` `.htm` `.xhtml` | With images from the neighbouring directory |
+| **Rich Text** | `.rtf` | Formatting, encodings, Unicode escapes |
 
-Das Format wird **am Inhalt** erkannt, nicht an der Endung — eine als `.epub`
-benannte AZW3-Datei wird trotzdem korrekt geöffnet.
+The format is detected **from the content**, not the extension — an AZW3 file
+named `.epub` still opens correctly.
 
-### Was bewusst nicht geht
+### What deliberately does not work
 
-| | Warum |
+| | Why |
 |---|---|
-| **DRM-geschützte Bücher** (Adobe ADEPT, Kindle) | Rechtlich und technisch außerhalb des Projekts. Solche Dateien werden erkannt und mit klarer Meldung abgelehnt, statt Buchstabensalat anzuzeigen. |
-| **KFX** (neues Kindle-Format) | Undokumentiert und in der Praxis stets DRM-behaftet. |
-| **`.cbr` ohne Systemwerkzeug** | Für RAR5 existiert kein freier Entpacker in Python, und die unrar-Lizenz verbietet das Mitliefern. Sind `unrar`, `bsdtar` oder `7z` installiert, werden sie genutzt; sonst gibt es eine Erklärung statt eines stummen Fehlers. |
-| **DjVu** | Bräuchte eine C-Bibliothek und damit einen Compiler in der Build-Kette. |
+| **DRM-protected books** (Adobe ADEPT, Kindle) | Legally and technically outside this project. Such files are recognised and refused with a clear message instead of showing garbage. |
+| **KFX** (the newer Kindle format) | Undocumented and in practice always DRM-encumbered. |
+| **`.cbr` without a system tool** | There is no free RAR5 extractor for Python, and the unrar licence forbids shipping the binary. If `unrar`, `bsdtar` or `7z` is installed it is used; otherwise you get an explanation rather than a silent failure. |
+| **DjVu** | Would need a C library, and therefore a compiler in the build chain. |
 
 ---
 
 ## Installation
 
-Für Windows gibt es beides — für alles andere reicht die Programmdatei.
+Windows gets both options; everywhere else the single executable is enough.
 
-| Plattform | Datei | Hinweis |
+| Platform | File | Note |
 |---|---|---|
-| Windows 10/11 (x64) | `OpenReader-*-windows-x86_64-setup.exe` | Installer mit wählbaren Dateiverknüpfungen |
-| Windows 10/11 (x64) | `OpenReader-*-windows-x86_64.exe` | portabel, Doppelklick, keine Installation |
-| macOS (Apple Silicon) | `OpenReader-*-macos-arm64.zip` | Entpacken, dann Rechtsklick → „Öffnen“ (nicht signiert) |
-| Linux (x64, glibc ≥ 2.35) | `OpenReader-*-linux-x86_64` | `chmod +x` und starten |
+| Windows 10/11 (x64) | `OpenReader-*-windows-x86_64-setup.exe` | Installer with selectable file associations |
+| Windows 10/11 (x64) | `OpenReader-*-windows-x86_64.exe` | Portable, double-click, nothing installed |
+| macOS (Apple Silicon) | `OpenReader-*-macos-arm64.zip` | Unpack, then right-click → "Open" (unsigned) |
+| Linux (x64, glibc ≥ 2.35) | `OpenReader-*-linux-x86_64` | `chmod +x` and run |
 
-### Beim ersten Start warnt Windows
+### Windows warns on first launch
 
-Beide Windows-Dateien sind **nicht signiert**, deshalb zeigt SmartScreen beim
-ersten Start „Der Computer wurde durch Windows geschützt“. Über
-**Weitere Informationen → Trotzdem ausführen** geht es weiter.
+Both Windows files are **unsigned**, so SmartScreen shows "Windows protected
+your PC" the first time. **More info → Run anyway** continues.
 
-Das ist kein Hinweis auf ein Problem mit der Datei, sondern schlicht die
-Abwesenheit eines Zertifikats: Ein Code-Signing-Zertifikat kostet laufend Geld,
-ist seit März 2026 auf 460 Tage Laufzeit begrenzt und würde die Warnung nicht
-einmal sofort beseitigen — SmartScreen baut Vertrauen erst über Downloadzahlen
-auf. Für ein Hobbyprojekt steht das in keinem Verhältnis.
+This says nothing about the file itself; it is simply the absence of a
+certificate. Code signing costs money every year, has been capped at 460 days
+of validity since March 2026, and would not even remove the warning right away
+— SmartScreen builds trust from download numbers. For a hobby project that is
+out of proportion.
 
-Wer die Datei prüfen möchte, vergleicht sie mit `SHA256SUMS.txt` aus demselben
-Release:
+To check the download, compare it against `SHA256SUMS.txt` from the same
+release:
 
 ```powershell
 Get-FileHash .\OpenReader-1.0.0-windows-x86_64-setup.exe -Algorithm SHA256
 ```
 
-### Installer oder portabel?
+### Installer or portable?
 
-| | Installer | Portable Datei |
+| | Installer | Portable file |
 |---|---|---|
-| Start bis zum Fenster | **351 ms** | 854 ms |
+| Launch to first window | **351 ms** | 854 ms |
 | Download | 28 MB | 36 MB |
-| Dateiverknüpfungen | ja, frei wählbar | nein |
-| Startmenü, Deinstallation | ja | nein |
-| Administratorrechte | nicht nötig (wahlweise) | nicht nötig |
-| Hinterlässt Spuren | ja, deinstallierbar | keine |
+| File associations | yes, freely selectable | no |
+| Start menu, uninstaller | yes | no |
+| Administrator rights | not required (optional) | not required |
+| Leaves traces | yes, uninstallable | none |
 
-Die portable Datei ist langsamer, weil sie sich bei **jedem** Start in ein
-temporäres Verzeichnis entpackt — genau das macht sie ja portabel. Der
-Installer legt die Dateien einmal ab und spart sich das.
+The portable file is slower because it unpacks itself into a temporary
+directory on **every** launch — which is exactly what makes it portable. The
+installer writes the files once and skips that.
 
-### Dateiverknüpfungen
+### File associations
 
-Der Installer zeigt eine eigene Seite, auf der **jeder Dateityp einzeln**
-an- und abwählbar ist, mit Schaltflächen für „Empfohlene“, „Alle“ und „Keine“.
-Vorausgewählt sind E-Books und Comic-Archive, weil Windows dafür meist gar
-kein Programm hat. PDF, Text und HTML sind bewusst nicht vorausgewählt — dort
-gibt es fast immer schon ein eingerichtetes Programm.
+The installer has a page of its own where **every file type is individually**
+selectable, with buttons for "Recommended", "All" and "None". E-books and comic
+archives start ticked because Windows usually has no handler for them at all.
+PDF, text and HTML start unticked — those almost always have a handler already.
 
-Was der Installer dabei tut, hängt vom Dateityp ab, und das ist keine
-Willkür, sondern die Grenze, die Windows zieht:
+What the installer does then depends on the file type, and that is not
+arbitrary but the line Windows draws:
 
-- **Typ hatte noch kein Programm** (`.mobi`, `.azw3`, `.fb2`, `.cbz` …) →
-  OpenReader wird der Standard.
-- **Typ hat bereits ein Programm** (`.pdf`, `.txt`, oft `.epub`) → OpenReader
-  kommt zu „Öffnen mit“ und in die Windows-Standard-Apps hinzu; der
-  vorhandene Standard bleibt unangetastet.
+- **Type had no handler** (`.mobi`, `.azw3`, `.fb2`, `.cbz` …) → OpenReader
+  becomes the default.
+- **Type already has a handler** (`.pdf`, `.txt`, often `.epub`) → OpenReader is
+  added to "Open with" and to the Windows default apps; the existing default is
+  left alone.
 
-Windows 10 und 11 lassen ein Setup-Programm den Standard nicht erzwingen, und
-das ist gut so. Zum Umstellen: **Einstellungen → Apps → Standard-Apps →
-OpenReader**.
+Windows 10 and 11 do not let an installer force the default handler, and that
+is a good thing. To change it: **Settings → Apps → Default apps → OpenReader**.
 
-Die Deinstallation nimmt die Verknüpfungen wieder zurück — aber nur die
-eigenen. Haben Sie einen Dateityp inzwischen einem anderen Programm
-zugewiesen, bleibt diese Zuweisung bestehen.
+Uninstalling takes the associations back — but only its own. If you have since
+pointed a file type at another program, that choice survives.
 
-Für unbeaufsichtigte Installationen:
+For unattended installs:
 
 ```bat
 OpenReader-1.0.0-windows-x86_64-setup.exe /VERYSILENT /ASSOC=.epub,.cbz
 ```
 
-`/ASSOC=` versteht `none`, `all`, `suggested` (Vorgabe) oder eine Liste von
-Endungen. Mit `/CURRENTUSER` beziehungsweise `/ALLUSERS` lässt sich der
-Installationsumfang festlegen, mit `/DIR=` das Zielverzeichnis.
+`/ASSOC=` accepts `none`, `all`, `suggested` (the default) or a list of
+extensions. `/CURRENTUSER` and `/ALLUSERS` select the install scope, `/DIR=`
+the target directory.
 
-### Portabel auf USB-Stick
+### Portable on a USB stick
 
-Standardmäßig liegen Leseposition und Einstellungen im Benutzerprofil. Für einen
-vollständig portablen Betrieb, der nichts auf dem Rechner hinterlässt, eine
-leere Datei `portable.txt` neben die Programmdatei legen — oder starten mit:
+By default the reading position and settings live in your user profile. For a
+fully portable setup that leaves nothing on the machine, put an empty
+`portable.txt` next to the executable — or start with:
 
 ```bash
 OpenReader --portable
 ```
 
-Alternativ ein beliebiger Ablageort:
+Any other location works too:
 
 ```bash
-OpenReader --data-dir /pfad/zu/meinen/daten
+OpenReader --data-dir /path/to/my/data
 ```
 
 ---
 
-## Bedienung
+## Using it
 
-| Taste | Wirkung |
+| Key | Action |
 |---|---|
-| `Leertaste` · `Bild ab` · `→` | Nächste Seite |
-| `Rücktaste` · `Bild auf` · `←` | Vorherige Seite |
-| `Strg+O` / `Strg+W` | Buch öffnen / schließen |
-| `Strg+F` · `F3` · `Umschalt+F3` | Suchen · nächster · vorheriger Treffer |
-| `Strg+B` | Lesezeichen setzen |
-| `Strg+H` | Auswahl markieren |
-| `Strg+G` | Gehe zu Seite oder Position |
-| `Strg++` / `Strg+−` / `Strg+0` | Schrift größer / kleiner / zurücksetzen |
-| `F9` / `F11` | Seitenleiste / Vollbild |
-| `Strg+,` | Einstellungen |
-| `Esc` | Suche beenden, Vollbild verlassen |
+| `Space` · `Page Down` · `→` | Next page |
+| `Backspace` · `Page Up` · `←` | Previous page |
+| `Ctrl+O` / `Ctrl+W` | Open / close book |
+| `Ctrl+F` · `F3` · `Shift+F3` | Search · next · previous match |
+| `Ctrl+B` | Add bookmark |
+| `Ctrl+H` | Highlight selection |
+| `Ctrl+G` | Go to page or position |
+| `Ctrl++` / `Ctrl+−` / `Ctrl+0` | Zoom in / out / reset |
+| `F9` / `F11` | Sidebar / full screen |
+| `Ctrl+,` | Settings |
+| `Esc` | Leave search, leave full screen |
 
-Bücher lassen sich auch per Drag & Drop ins Fenster ziehen.
+Books can also be dropped onto the window.
 
-**Weiteres:** vier Farbschemata (Hell, Sepia, Dunkel, OLED-Schwarz), einstellbare
-Schriftart, -größe, Zeilen- und Absatzabstand, Seitenrand und maximale
-Zeilenbreite; Lesezeichen und farbige Markierungen mit Notizen, exportierbar
-als Markdown; die Leseposition wird pro Buch gemerkt und überlebt das
-Verschieben der Datei, weil Bücher am Inhalt und nicht am Pfad erkannt werden.
+**Also included:** four colour schemes (light, sepia, dark, OLED black);
+adjustable font, size, line and paragraph spacing, page margin and maximum line
+length; bookmarks and coloured highlights with notes, exportable as Markdown.
+The reading position is remembered per book and survives moving the file,
+because books are identified by content rather than by path.
 
 ---
 
-## Aus dem Quelltext
+## From source
 
 ```bash
 python -m pip install -r requirements-dev.txt
-python -m openreader                     # starten
-python -m pytest                         # 169 Tests
-python tests/smoke_gui.py --visible      # Screenshots aller Ansichten
-python tests/bench_reader.py             # Scroll-Leistung messen
-python tests/bench_prefetch.py --book X  # Restruckler beziffern
+python -m openreader                     # run
+python -m pytest                         # 174 tests
+python tests/smoke_gui.py --visible      # screenshots of every view
+python tests/bench_reader.py             # measure scrolling performance
+python tests/bench_prefetch.py --book X  # quantify the remaining stutter
 pyinstaller build/openreader.spec --noconfirm --distpath build/dist
-python build/make_installer.py           # Windows-Installer (braucht Inno Setup 6)
+python build/make_installer.py           # Windows installer (needs Inno Setup 6)
 ```
 
-Benötigt Python 3.10 oder neuer.
+Requires Python 3.10 or newer.
 
 ---
 
-## Aufbau
+## Layout
 
 ```
 openreader/
-├── formats/     Ein Parser je Format → ein gemeinsames Book-Modell
-├── render/      HTML5→Qt-Normalisierung, Farbschemata, Typografie
-├── storage/     SQLite (Position, Lesezeichen, Markierungen) und Einstellungen
-└── ui/          Hauptfenster, Text-/PDF-/Comic-Ansicht, Panels, Ladethread
+├── formats/     One parser per format → one shared Book model
+├── render/      HTML5→Qt normalisation, colour schemes, typography
+├── storage/     SQLite (position, bookmarks, highlights) and settings
+└── ui/          Main window, text/PDF/comic views, panels, loading thread
 ```
 
-Alle Format-Parser liefern dasselbe `Book`-Objekt, weshalb die Ansichten
-keinerlei formatspezifische Sonderfälle enthalten. Das Laden läuft in einem
-Arbeitsthread; nur das fertige Dokument wird an die Oberfläche übergeben.
+Every format parser produces the same `Book` object, which is what keeps the
+views free of format-specific special cases. Loading runs on a worker thread;
+only the finished document is handed to the interface.
 
-### Technische Entscheidungen
+### Technical decisions
 
-**Warum Qts eigene Rich-Text-Engine statt einer eingebetteten Browser-Engine?**
-Ein eingebettetes Chromium würde die Programmdatei von 36 MB auf über 250 MB
-aufblähen und wäre faktisch ein Browser. Qts Engine versteht dafür nur einen
-Teil von CSS 2.1 — für Belletristik und normale Sachbücher ist das
-ausgezeichnet, bei mehrspaltigen oder aufwendig gestalteten EPUB-3-Layouts
-werden Feinheiten vereinfacht dargestellt. Verlags-Stylesheets lassen sich in
-den Einstellungen zuschalten; standardmäßig sind sie aus, weil ein zur Hälfte
-angewandtes Stylesheet meist schlechter aussieht als ein sauberes eigenes.
+**Why Qt's own rich text engine rather than an embedded browser engine?**
+An embedded Chromium would grow the executable from 36 MB to over 250 MB and
+would effectively be a browser. In exchange, Qt's engine understands only part
+of CSS 2.1 — excellent for fiction and ordinary non-fiction, simplified for
+multi-column or elaborately designed EPUB 3 layouts. Publisher stylesheets can
+be switched on in the settings; they are off by default, because a
+half-applied stylesheet usually looks worse than a clean one of our own.
 
-**Warum ein einziges Dokument statt eines pro Kapitel?**
-Nur so funktionieren durchgehendes Scrollen, buchweite Suche und stabile
-Positionen für Markierungen. Weil das Dokument deterministisch aus der Datei
-entsteht, zeigt eine gespeicherte Markierung auch nach Monaten noch auf
-dieselben Wörter.
+**Why a single document instead of one per chapter?**
+It is the only way continuous scrolling, whole-book search and stable highlight
+positions work at all. Because the document is built deterministically from the
+file, a stored highlight still points at the same words months later.
 
-**Warum cacht der Reader Bilder selbst?**
-Qt legt eine Ressource erst dann in seinen Cache, wenn die *Basisimplementierung*
-von `loadResource` durchläuft. Da Buchbilder im Speicher liegen und nicht auf der
-Platte, muss der Reader vorher zurückkehren — und damit auch selbst cachen. Ohne
-das wurde jede Abbildung bei **jedem einzelnen Neuzeichnen** neu dekodiert und
-geglättet skaliert. Auf einem 21-MB-Roman mit 15 ganzseitigen Tafeln kostete das
-303 ms pro Frame; die Hälfte aller Frames lag unter 30 fps. Gemessen und behoben:
-siehe [Scroll-Leistung](#scroll-leistung).
+**Why does the reader cache images itself?**
+Qt only puts a resource into its cache when the *base implementation* of
+`loadResource` runs. Book images live in memory rather than on disk, so the
+reader has to return before that point — and therefore has to cache them
+itself. Without that, every illustration was decoded and smoothly rescaled on
+**every single repaint**. On a 21 MB novel with 15 full-page plates that cost
+303 ms per frame, and half of all frames fell below 30 fps. Measured and fixed:
+see [Scrolling performance](#scrolling-performance).
 
-**Warum werden Bilder nicht im Hintergrund vorausgeladen?**
-Weil gemessen wurde, was es brächte. Nach dem Cache bleibt ein Restaufwand: Ein
-Bild muss beim allerersten Erscheinen einmal dekodiert werden. Über das
-vollständige Durchscrollen eines 21-MB-Bilderbuchs sind das **11 spürbare Frames
-von 7.426** — 0,15 %, je rund 17 ms über dem Normalwert, also ein bis zwei
-ausgelassene Bilder bei 60 Hz. Einmal komplett durchblättern kostet insgesamt
-0,26 Sekunden. Im ungünstigsten Fall, einem Sprung über das Inhaltsverzeichnis,
-entfallen von etwa 59 ms nur ~25 ms aufs Dekodieren; ein Vorauslader könnte also
-nicht einmal die Hälfte davon einsparen. Dem stünden ein Hintergrund-Thread, ein
-gesperrter Cache, Vorhersagelogik für den sichtbaren Bereich und eine
-schwer testbare Klasse von Wettlauffehlern gegenüber. Nachrechnen mit
-`tests/bench_prefetch.py`.
+**Why are images not prefetched in the background?**
+Because the benefit was measured. After the cache one cost remains: a picture
+must be decoded once, the first time it appears. Scrolling through an entire
+21 MB illustrated book, that is **11 noticeable frames out of 7,426** — 0.15 %,
+each about 17 ms above normal, so one or two dropped frames at 60 Hz. Paging
+through the whole book costs 0.26 seconds in total. In the worst case, a jump
+via the table of contents, only ~25 ms of roughly 59 ms is decoding, so a
+prefetcher could not even save half of it. Against that stand a background
+thread, a locked cache, viewport prediction logic and a hard-to-test class of
+race conditions. Recheck it with `tests/bench_prefetch.py`.
 
-**Warum wird die Zeilenhöhe bei Bildern zurückgesetzt?**
-Ein relativer `line-height` multipliziert die Höhe des größten Elements einer
-Zeile. Eine 320 px hohe Abbildung in einem 155-%-Absatz belegt sonst 496 px und
-hinterlässt ein Loch. Blöcke mit Bildern bekommen deshalb nachträglich 100 %
-Zeilenhöhe — und werden gleich mittig gesetzt.
+**Why is the line height reset for images?**
+A relative `line-height` multiplies the height of the tallest element on a
+line. A 320 px illustration inside a 155 % paragraph would otherwise occupy
+496 px and leave a hole. Blocks containing images therefore get 100 % line
+height afterwards — and are centred while we are at it.
 
-### Welche Daten wo gespeichert werden
+### What is stored, and where
 
-OpenReader sendet nichts ins Netz. Lokal gespeichert werden Dateipfad, Titel,
-Autor, Zeitpunkt des Öffnens, Leseposition sowie Lesezeichen, Markierungen und
-Notizen — in `library.sqlite3` und `settings.json`:
+OpenReader sends nothing over the network. Stored locally are the file path,
+title, author, time of opening, reading position, plus bookmarks, highlights
+and notes — in `library.sqlite3` and `settings.json`:
 
-| Plattform | Ort |
+| Platform | Location |
 |---|---|
 | Windows | `%APPDATA%\openreader` |
 | macOS | `~/Library/Application Support/openreader` |
-| Linux | `$XDG_DATA_HOME/openreader` bzw. `~/.local/share/openreader` |
+| Linux | `$XDG_DATA_HOME/openreader` or `~/.local/share/openreader` |
 
-Das Verzeichnis gehört dem eigenen Konto: unter Linux und macOS mit `0700`
-beziehungsweise `0600` für die Dateien, unter Windows über eine ACL, die nur
-den Eigentümer und SYSTEM einträgt. Das ist vor allem für den portablen Modus
-wichtig — ein Datenordner in einem freigegebenen Verzeichnis würde dessen
-Rechte sonst erben. Auf Dateisystemen ganz ohne Rechteverwaltung, etwa einem
-FAT-formatierten USB-Stick, lässt sich nichts durchsetzen; dort liegen die
-Daten offen.
+The directory belongs to your account alone: `0700` on Linux and macOS with
+`0600` for the files, and on Windows an ACL naming only the owner and SYSTEM.
+This matters most in portable mode — a data folder inside a shared directory
+would otherwise inherit that directory's permissions. On a file system with no
+permissions at all, such as a FAT-formatted USB stick, nothing can be enforced
+and the data sits in the open.
 
-**Verschlüsselt sind sie nicht.** Wer das braucht, legt sie per `--data-dir`
-auf einen verschlüsselten Datenträger. **Datei → Zuletzt geöffnet → Liste
-leeren** löscht den gesamten Verlauf einschließlich Lesezeichen und Notizen.
+**It is not encrypted.** If you need that, point `--data-dir` at an encrypted
+volume. **File → Recently opened → Clear list** deletes the whole history,
+bookmarks and notes included.
 
 ---
 
-## Scroll-Leistung
+## Scrolling performance
 
-Gemessen mit `tests/bench_reader.py` an einem echten 21-MB-Roman mit 15
-ganzseitigen JPEG-Tafeln, Fenster maximiert, 150 Mausrad-Rasten,
-150-%-Skalierung:
+Measured with `tests/bench_reader.py` on a real 21 MB novel with 15 full-page
+JPEG plates, window maximised, 150 wheel notches, 150 % display scaling:
 
-| | vorher | nachher |
+| | before | after |
 |---|---|---|
-| Frame über einer Abbildung (Median) | 303 ms | **4 ms** |
-| schlechtester Frame | 453 ms | **31 ms** |
-| Frames unter 30 fps | 77 von 150 | **0 von 150** |
-| Bilddekodierungen beim Scrollen | 939 | **2** |
-| Ladezeit | 2,85 s | **0,47 s** |
-| Speicher | 199 MB | 249 MB |
+| Frame over an illustration (median) | 303 ms | **4 ms** |
+| Worst frame | 453 ms | **31 ms** |
+| Frames below 30 fps | 77 of 150 | **0 of 150** |
+| Image decodes while scrolling | 939 | **2** |
+| Load time | 2.85 s | **0.47 s** |
+| Memory | 199 MB | 249 MB |
 
-Reine Textpassagen lagen vorher wie nachher bei rund 5 ms — das Textlayout war
-nie das Problem, und es wächst auch nicht mit der Position im Buch.
+Plain text passages sat at about 5 ms before and after — the text layout was
+never the problem, and it does not grow with the position in the book.
 
-Die 50 MB Mehrverbrauch sind der Bildcache. Sein Budget wurde nicht geschätzt,
-sondern gemessen: bei 48 MB brach kein Frame ein, bei 24 MB waren es 39 und bei
-12 MB wieder 75. Mehr als 48 MB brachte keine weitere Glätte.
+The extra 50 MB is the image cache. Its budget was not guessed but measured: at
+48 MB not one frame dropped, at 24 MB 39 did and at 12 MB 75 did. More than
+48 MB bought no further smoothness.
 
-Zwei kleinere Korrekturen kamen aus derselben Messung: Bilder werden über
-`QImageReader.setScaledSize` gleich in Zielgröße dekodiert statt voll und dann
-skaliert (das allein macht das Laden sechsmal schneller), und `apply_typography`
-erzwingt kein vollständiges Neulayout mehr, wenn sich weder Schrift noch Breite
-geändert haben.
+Two smaller fixes came out of the same measurement: images are decoded straight
+to their target size via `QImageReader.setScaledSize` rather than fully and then
+scaled (that alone makes loading six times faster), and `apply_typography` no
+longer forces a full relayout when neither the font nor the width changed.
 
 ```bash
-python tests/bench_reader.py --book "mein-buch.epub"
+python tests/bench_reader.py --book "my-book.epub"
 ```
 
-Das Werkzeug meldet Frame-Zeiten getrennt nach Passagen mit und ohne Abbildung
-und beendet sich mit Rückgabewert 1, sobald ein Frame ruckelt.
+The tool reports frame times separately for passages with and without an
+illustration, and exits with status 1 as soon as a frame stutters.
 
 ---
 
 ## Tests
 
-169 automatisierte Tests, davon 34 auf Widget-Ebene, die das echte Fenster
-steuern: jedes Format wird über den realen Ladeweg geöffnet, Suche, Markierungen
-und Wiederherstellung der Leseposition werden durchgespielt, und beschädigte
-sowie DRM-geschützte Dateien müssen eine verständliche Meldung erzeugen statt
-abzustürzen.
+174 automated tests, 34 of them at widget level driving the real window: every
+format is opened through the actual loading path, search, highlights and
+restoring the reading position are exercised, and damaged as well as
+DRM-protected files must produce a comprehensible message instead of crashing.
 
-Die Testbücher sind **echte Dateien** — ein gültiges ZIP-EPUB, ein
-byteweise korrektes PalmDB-MOBI, ein PDF mit stimmiger xref-Tabelle —, damit
-die Parser genauso beansprucht werden wie von einem Buch aus dem Handel.
+The test books are **real files** — a valid ZIP EPUB, a byte-correct PalmDB
+MOBI, a PDF with a consistent xref table — so the parsers are stressed the same
+way a book from a shop would stress them.
 
-### Prüfstand
+### Test bench
 
-Was auf welcher Grundlage geprüft ist:
+What rests on what evidence:
 
-| | Stand |
+| | Status |
 |---|---|
-| EPUB 2/3, MOBI (KF7), FB2, PDF, CBZ, TXT, MD, HTML, RTF | Automatisiert getestet und von Hand angesehen |
-| Windows-Programmdatei | Gebaut, gestartet, öffnet Bücher — geprüft |
-| **HUFF/CDIC-Dekompression** | Gegen eine selbstgebaute, formatkonforme Huffman-Tabelle getestet, einschließlich verschachtelter Phrasen. Damit sind Bit-Leser, Tabellenzugriff und Rekursion abgedeckt — **nicht** aber die variablen Codelängen eines echten Verlagsbuchs. |
-| **AZW3 / KF8** | Gegen eine selbst erzeugte KF8-Datei getestet (Flow-Schnitt, `kindle:embed`, Anker, TOC). Es lag **keine echte AZW3-Datei aus dem Handel** vor; besonders die Skeleton-/Fragment-Rekonstruktion ist bewusst vereinfacht. Bitte mit einem echten Buch gegenprüfen. |
-| macOS- und Linux-Programmdatei | Über CI-Workflow vorbereitet, **hier nicht ausgeführt** — es stand nur ein Windows-Rechner zur Verfügung |
-| CBR | Pfad über externe Werkzeuge implementiert; getestet ist die Fehlermeldung, wenn keines vorhanden ist |
+| EPUB 2/3, MOBI (KF7), FB2, PDF, CBZ, TXT, MD, HTML, RTF | Tested automatically and inspected by hand |
+| Windows executable and installer | Built, launched, opens books, associations and uninstall verified |
+| **HUFF/CDIC decompression** | Tested against a purpose-built, format-conformant Huffman table including nested phrases. That covers the bit reader, table access and recursion — but **not** the variable code lengths of a real published book. |
+| **AZW3 / KF8** | Tested against a self-generated KF8 file (flow cut, `kindle:embed`, anchors, TOC). **No commercial AZW3 file was available**; the skeleton/fragment reconstruction in particular is deliberately simplified. Please cross-check with a real book. |
+| macOS and Linux executables | Prepared through the CI workflow, **not run here** — only a Windows machine was available |
+| CBR | Path through external tools implemented; what is tested is the error message when none is present |
 
 ---
 
-## Lizenz
+## Project documents
 
-GNU General Public License v3.0 oder später — siehe [LICENSE](LICENSE).
+| Document | Language |
+|---|---|
+| [CHANGELOG.md](CHANGELOG.md) — what changed in each release | English |
+| [SECURITY.md](SECURITY.md) — threat model and how to report a vulnerability | English |
+| [docs/RELEASING.md](docs/RELEASING.md) — how a release is cut | English |
+| [docs/audit-2026-09-08.md](docs/audit-2026-09-08.md) — security and quality audit, 16 findings and their fixes | German |
 
-Die Oberfläche nutzt Qt über PySide6 unter der LGPL v3. Weil PySide6 dynamisch
-gebunden wird, sind die LGPL-Auflagen erfüllt; die Qt-Bibliotheken liegen als
-eigene Dateien im Bündel und lassen sich austauschen.
+---
+
+## Licence
+
+GNU General Public License v3.0 or later — see [LICENSE](LICENSE).
+
+The interface uses Qt through PySide6 under the LGPL v3. Because PySide6 is
+linked dynamically the LGPL conditions are met; the Qt libraries sit in the
+bundle as separate files and can be replaced.

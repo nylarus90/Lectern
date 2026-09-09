@@ -18,7 +18,10 @@
 
 #define AppName        "OpenReader"
 #define AppPublisher   "OpenReader"
-#define AppUrl         "https://github.com/openreader/openreader"
+; The project has no public home yet.  Set this once it does and the
+; wizard, the "Programs and Features" entry and the support links all
+; pick it up; left empty, those fields are simply omitted.
+#define AppUrl         ""
 #define ExeName        "OpenReader.exe"
 #define ProgIdPrefix   "OpenReader"
 
@@ -43,9 +46,11 @@ AppName={#AppName}
 AppVersion={#AppVersion}
 AppVerName={#AppName} {#AppVersion}
 AppPublisher={#AppPublisher}
+#if AppUrl != ""
 AppPublisherURL={#AppUrl}
 AppSupportURL={#AppUrl}
 AppUpdatesURL={#AppUrl}
+#endif
 VersionInfoVersion={#AppVersion}
 VersionInfoCompany={#AppPublisher}
 VersionInfoDescription={#AppName} Setup

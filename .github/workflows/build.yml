@@ -256,7 +256,8 @@ jobs:
             | macOS (Apple Silicon) | `OpenReader-${{ github.ref_name }}-macos-arm64.zip` |
             | Linux (x64, glibc ≥ 2.35) | `OpenReader-${{ github.ref_name }}-linux-x86_64` |
 
-            Prüfsummen stehen in `SHA256SUMS.txt`.
+            Prüfsummen stehen in `SHA256SUMS.txt`, die Änderungen in
+            [CHANGELOG.md](CHANGELOG.md).
 
             **Windows:** Die Dateien sind nicht signiert, daher meldet sich
             SmartScreen beim ersten Start. Über „Weitere Informationen →

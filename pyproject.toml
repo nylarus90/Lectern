@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "openreader"
 version = "1.0.0"
-description = "Freier E-Book-Reader für EPUB, Kindle-Formate, FB2, PDF, Comics, Text, Markdown, HTML und RTF"
+description = "Free e-book reader for EPUB, Kindle formats, FB2, PDF, comics, text, Markdown, HTML and RTF"
 readme = "README.md"
 requires-python = ">=3.10"
 license = "GPL-3.0-or-later"
@@ -20,6 +20,9 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Topic :: Text Processing :: Markup",
 ]
+# [project.urls] is deliberately absent: the project has no public home yet,
+# and an invented URL is worse than none.  Add Homepage/Repository/Changelog
+# here once it does.
 dependencies = [
     "PySide6-Essentials>=6.7",
     "PySide6-Addons>=6.7",

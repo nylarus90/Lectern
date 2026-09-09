@@ -12,17 +12,9 @@ import os
 import pytest
 
 from . import make_samples
+from .conftest import dispose, spin
 
 pytest.importorskip("PySide6.QtWidgets")
-
-
-@pytest.fixture(scope="module")
-def app(tmp_path_factory):
-    os.environ["OPENREADER_DATA_DIR"] = str(tmp_path_factory.mktemp("data"))
-    from PySide6.QtWidgets import QApplication
-
-    instance = QApplication.instance() or QApplication([])
-    yield instance
 
 
 @pytest.fixture(scope="module")
@@ -43,17 +35,15 @@ def window(app, tmp_path):
     win.show()
     _spin(app, 120)
     yield win
-    win.close()
+    # Destroy the window here rather than leaving it to the garbage collector.
+    # Twenty-six of these outliving the application is what made the process
+    # segfault at exit even though every test had passed.
+    dispose(app, win)
     library.close()
 
 
 def _spin(app, milliseconds: int = 200) -> None:
-    from PySide6.QtCore import QElapsedTimer
-
-    timer = QElapsedTimer()
-    timer.start()
-    while timer.elapsed() < milliseconds:
-        app.processEvents()
+    spin(app, milliseconds)
 
 
 def _open(app, window, path: str, timeout_ms: int = 15000) -> None:

@@ -9,21 +9,12 @@ repaint touching a picture decoded and rescaled it — 300 ms per frame on a
 
 from __future__ import annotations
 
-import os
-
 import pytest
 
 from . import make_samples
+from .conftest import dispose
 
 pytest.importorskip("PySide6.QtWidgets")
-
-
-@pytest.fixture(scope="module")
-def app(tmp_path_factory):
-    os.environ["OPENREADER_DATA_DIR"] = str(tmp_path_factory.mktemp("data"))
-    from PySide6.QtWidgets import QApplication
-
-    return QApplication.instance() or QApplication([])
 
 
 @pytest.fixture
@@ -45,7 +36,8 @@ def document(app, book_with_plate):
 
     doc = _BookDocument(book_with_plate)
     doc.setTextWidth(600.0)
-    return doc
+    yield doc
+    dispose(app, doc)
 
 
 def _image(document, key="plate.png"):
@@ -87,9 +79,12 @@ def test_small_image_is_left_alone(app, book_with_plate):
     book_with_plate.resources["small.png"] = make_samples._make_png(80, 60)
     doc = _BookDocument(book_with_plate)
     doc.setTextWidth(600.0)
-    image = _image(doc, "small.png")
-    assert (image.width(), image.height()) == (80, 60)
-    assert image.devicePixelRatio() == 1.0, "an unscaled image must not be shrunk"
+    try:
+        image = _image(doc, "small.png")
+        assert (image.width(), image.height()) == (80, 60)
+        assert image.devicePixelRatio() == 1.0, "an unscaled image must not be shrunk"
+    finally:
+        dispose(app, doc)
 
 
 def test_unknown_resource_falls_through(document):
@@ -107,11 +102,14 @@ def test_cache_evicts_to_stay_within_budget(app, book_with_plate):
     doc.setTextWidth(600.0)
     # Room for roughly one rendition, so the second must push the first out.
     doc._cache = _ImageCache(budget=1_500_000)
-    for index in range(6):
-        book_with_plate.resources["p%d.png" % index] = make_samples._make_png(1200, 300)
-        assert _image(doc, "p%d.png" % index) is not None
-    assert doc._cache._bytes <= doc._cache.budget
-    assert len(doc._cache._entries) < 6, "the cache must not grow without bound"
+    try:
+        for index in range(6):
+            book_with_plate.resources["p%d.png" % index] = make_samples._make_png(1200, 300)
+            assert _image(doc, "p%d.png" % index) is not None
+        assert doc._cache._bytes <= doc._cache.budget
+        assert len(doc._cache._entries) < 6, "the cache must not grow without bound"
+    finally:
+        dispose(app, doc)
 
 
 def test_width_change_drops_stale_renditions(document):
@@ -145,7 +143,10 @@ def test_view_uses_the_caching_document(app, tmp_path):
     book = load(path)
     view = ReaderView(Settings(str(tmp_path / "s.json")))
     view.resize(700, 500)
-    view.set_book(book, assemble(book))
-    assert isinstance(view.document(), _BookDocument)
-    # The width must be settled before parsing, so images are sized once.
-    assert view.document().textWidth() > 1
+    try:
+        view.set_book(book, assemble(book))
+        assert isinstance(view.document(), _BookDocument)
+        # The width must be settled before parsing, so images are sized once.
+        assert view.document().textWidth() > 1
+    finally:
+        dispose(app, view)

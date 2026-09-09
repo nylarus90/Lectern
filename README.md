@@ -50,6 +50,25 @@ Für Windows gibt es beides — für alles andere reicht die Programmdatei.
 | macOS (Apple Silicon) | `OpenReader-*-macos-arm64.zip` | Entpacken, dann Rechtsklick → „Öffnen“ (nicht signiert) |
 | Linux (x64, glibc ≥ 2.35) | `OpenReader-*-linux-x86_64` | `chmod +x` und starten |
 
+### Beim ersten Start warnt Windows
+
+Beide Windows-Dateien sind **nicht signiert**, deshalb zeigt SmartScreen beim
+ersten Start „Der Computer wurde durch Windows geschützt“. Über
+**Weitere Informationen → Trotzdem ausführen** geht es weiter.
+
+Das ist kein Hinweis auf ein Problem mit der Datei, sondern schlicht die
+Abwesenheit eines Zertifikats: Ein Code-Signing-Zertifikat kostet laufend Geld,
+ist seit März 2026 auf 460 Tage Laufzeit begrenzt und würde die Warnung nicht
+einmal sofort beseitigen — SmartScreen baut Vertrauen erst über Downloadzahlen
+auf. Für ein Hobbyprojekt steht das in keinem Verhältnis.
+
+Wer die Datei prüfen möchte, vergleicht sie mit `SHA256SUMS.txt` aus demselben
+Release:
+
+```powershell
+Get-FileHash .\OpenReader-1.0.0-windows-x86_64-setup.exe -Algorithm SHA256
+```
+
 ### Installer oder portabel?
 
 | | Installer | Portable Datei |

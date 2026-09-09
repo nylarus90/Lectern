@@ -258,6 +258,11 @@ jobs:
 
             Prüfsummen stehen in `SHA256SUMS.txt`.
 
+            **Windows:** Die Dateien sind nicht signiert, daher meldet sich
+            SmartScreen beim ersten Start. Über „Weitere Informationen →
+            Trotzdem ausführen“ geht es weiter; die Prüfsumme in
+            `SHA256SUMS.txt` belegt, dass die Datei unverändert ist.
+
             **macOS:** Das Bundle ist nicht signiert. Beim ersten Start
             Rechtsklick → „Öffnen“, oder einmalig
             `xattr -dr com.apple.quarantine OpenReader.app`.

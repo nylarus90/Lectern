@@ -20,13 +20,16 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Topic :: Text Processing :: Markup",
 ]
-# [project.urls] is deliberately absent: the project has no public home yet,
-# and an invented URL is worse than none.  Add Homepage/Repository/Changelog
-# here once it does.
 dependencies = [
     "PySide6-Essentials>=6.7",
     "PySide6-Addons>=6.7",
 ]
+
+[project.urls]
+Homepage = "https://github.com/nylarus90/OpenReader"
+Repository = "https://github.com/nylarus90/OpenReader"
+Changelog = "https://github.com/nylarus90/OpenReader/blob/main/CHANGELOG.md"
+Issues = "https://github.com/nylarus90/OpenReader/issues"
 
 [project.optional-dependencies]
 cb7 = ["py7zr>=0.21"]

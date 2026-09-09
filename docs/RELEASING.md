@@ -70,9 +70,9 @@ rather than publishing half of it.
 - Download the Windows installer from the release page and check its SHA-256
   against `SHA256SUMS.txt`. This catches a broken upload, and it is the same
   check the README asks users to perform.
-- The macOS and Linux builds have never been run on their target platforms by
-  the maintainer. If someone reports that one of them fails to start, treat it
-  as expected rather than surprising, and say so in the issue.
+- CI builds and launches the macOS and Linux binaries on their own platforms,
+  but nobody has read a book with them. If someone reports a problem there that
+  goes beyond starting up, treat it as plausible rather than surprising.
 
 ## Things that are deliberately not done
 

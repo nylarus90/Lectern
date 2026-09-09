@@ -326,7 +326,7 @@ Was auf welcher Grundlage geprüft ist:
 | Windows-Programmdatei | Gebaut, gestartet, öffnet Bücher — geprüft |
 | **HUFF/CDIC-Dekompression** | Gegen eine selbstgebaute, formatkonforme Huffman-Tabelle getestet, einschließlich verschachtelter Phrasen. Damit sind Bit-Leser, Tabellenzugriff und Rekursion abgedeckt — **nicht** aber die variablen Codelängen eines echten Verlagsbuchs. |
 | **AZW3 / KF8** | Gegen eine selbst erzeugte KF8-Datei getestet (Flow-Schnitt, `kindle:embed`, Anker, TOC). Es lag **keine echte AZW3-Datei aus dem Handel** vor; besonders die Skeleton-/Fragment-Rekonstruktion ist bewusst vereinfacht. Bitte mit einem echten Buch gegenprüfen. |
-| macOS- und Linux-Programmdatei | Über CI-Workflow vorbereitet, **hier nicht ausgeführt** — es stand nur ein Windows-Rechner zur Verfügung |
+| macOS- und Linux-Programmdatei | Von der CI auf der jeweiligen Plattform gebaut **und gestartet**. Dort aber nie zum Lesen benutzt — entwickelt wurde auf Windows, alles jenseits von „startet“ ist auf diesen beiden ungeprüft. |
 | CBR | Pfad über externe Werkzeuge implementiert; getestet ist die Fehlermeldung, wenn keines vorhanden ist |
 
 ---

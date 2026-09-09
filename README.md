@@ -318,7 +318,7 @@ What rests on what evidence:
 | Windows executable and installer | Built, launched, opens books, associations and uninstall verified |
 | **HUFF/CDIC decompression** | Tested against a purpose-built, format-conformant Huffman table including nested phrases. That covers the bit reader, table access and recursion — but **not** the variable code lengths of a real published book. |
 | **AZW3 / KF8** | Tested against a self-generated KF8 file (flow cut, `kindle:embed`, anchors, TOC). **No commercial AZW3 file was available**; the skeleton/fragment reconstruction in particular is deliberately simplified. Please cross-check with a real book. |
-| macOS and Linux executables | Prepared through the CI workflow, **not run here** — only a Windows machine was available |
+| macOS and Linux executables | Built **and launched** by CI on their own platforms. Never used for actual reading there, though — development happened on Windows, so anything beyond "it starts" is untested on those two. |
 | CBR | Path through external tools implemented; what is tested is the error message when none is present |
 
 ---

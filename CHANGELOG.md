@@ -120,8 +120,9 @@ source, fixed, and covered by regression tests.
 ### Known limitations
 
 - The interface is German only; there is no translation layer yet.
-- macOS and Linux executables are produced by CI but were never run on those
-  platforms during development — only a Windows machine was available.
+- macOS and Linux executables are built and launched by CI on their own
+  platforms, but were never used for actual reading there. Development happened
+  on Windows, so on those two anything beyond "it starts" is untested.
 - HUFF/CDIC decompression is tested against a purpose-built table, not against
   a commercially published book.
 - AZW3/KF8 reconstruction is deliberately simplified and was tested only

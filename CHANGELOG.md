@@ -4,6 +4,15 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Fixed
+
+- The README's two copy-paste commands named `OpenReader-1.0.0-…`, while the
+  release job names its files after the tag — the real file is
+  `OpenReader-v1.0.0-…`. Both commands failed with "file not found" for anyone
+  who followed them. A test now compares the names against the version.
+
 ## 1.1.0 — 2026-09-09
 
 ### Added

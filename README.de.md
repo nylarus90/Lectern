@@ -83,7 +83,7 @@ Wer die Datei prüfen möchte, vergleicht sie mit `SHA256SUMS.txt` aus demselben
 Release:
 
 ```powershell
-Get-FileHash .\OpenReader-1.0.0-windows-x86_64-setup.exe -Algorithm SHA256
+Get-FileHash .\OpenReader-v1.1.0-windows-x86_64-setup.exe -Algorithm SHA256
 ```
 
 ### Installer oder portabel?
@@ -129,7 +129,7 @@ zugewiesen, bleibt diese Zuweisung bestehen.
 Für unbeaufsichtigte Installationen:
 
 ```bat
-OpenReader-1.0.0-windows-x86_64-setup.exe /VERYSILENT /ASSOC=.epub,.cbz
+OpenReader-v1.1.0-windows-x86_64-setup.exe /VERYSILENT /ASSOC=.epub,.cbz
 ```
 
 `/ASSOC=` versteht `none`, `all`, `suggested` (Vorgabe) oder eine Liste von

@@ -57,3 +57,23 @@ def test_release_tag_matches_version() -> None:
         "CHANGELOG.md has no dated section for %s; a section still headed "
         "'Unreleased' means the release notes describe nothing" % __version__
     )
+
+
+def test_readme_examples_name_a_file_that_will_exist() -> None:
+    """The README's copy-paste commands must name the current release file.
+
+    They were written as ``OpenReader-1.0.0-…`` while the release job names its
+    files after the tag, so the real file is ``OpenReader-v1.0.0-…``. Both
+    commands failed with "file not found" for anyone who followed them, and
+    they went on drifting with every release.
+    """
+
+    expected = "OpenReader-v%s-windows-x86_64-setup.exe" % __version__
+    for name in ("README.md", "README.de.md"):
+        text = (ROOT / name).read_text(encoding="utf-8")
+        stale = re.findall(r"OpenReader-v?\d+\.\d+\.\d+-windows-x86_64-setup\.exe",
+                           text)
+        assert stale, "%s names no installer file any more" % name
+        assert set(stale) == {expected}, (
+            "%s refers to %s; the release is %s" % (name, sorted(set(stale)), expected)
+        )

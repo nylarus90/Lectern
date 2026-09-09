@@ -81,7 +81,7 @@ To check the download, compare it against `SHA256SUMS.txt` from the same
 release:
 
 ```powershell
-Get-FileHash .\OpenReader-1.0.0-windows-x86_64-setup.exe -Algorithm SHA256
+Get-FileHash .\OpenReader-v1.1.0-windows-x86_64-setup.exe -Algorithm SHA256
 ```
 
 ### Installer or portable?
@@ -124,7 +124,7 @@ pointed a file type at another program, that choice survives.
 For unattended installs:
 
 ```bat
-OpenReader-1.0.0-windows-x86_64-setup.exe /VERYSILENT /ASSOC=.epub,.cbz
+OpenReader-v1.1.0-windows-x86_64-setup.exe /VERYSILENT /ASSOC=.epub,.cbz
 ```
 
 `/ASSOC=` accepts `none`, `all`, `suggested` (the default) or a list of

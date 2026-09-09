@@ -188,6 +188,13 @@ jobs:
           $out = & $exe --version
           if ($out -notmatch "OpenReader") { throw "Unerwartete Ausgabe: $out" }
 
+          # The licence texts have to arrive next to the program, not just
+          # inside the bundle: v1.1.0 shipped four binaries without one.
+          foreach ($licence in "GPL-3.0.txt", "LGPL-3.0.txt") {
+            $path = Join-Path $target "licenses\$licence"
+            if (-not (Test-Path $path)) { throw "Lizenztext fehlt: $licence" }
+          }
+
           $assoc = (Get-ItemProperty "HKCU:\Software\OpenReader" -Name Associations).Associations
           if ($assoc -ne ".epub;.cbz;") { throw "Falsche Verknüpfungen: $assoc" }
           Write-Host "Installiert, Version $out, Verknüpfungen $assoc"

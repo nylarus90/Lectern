@@ -81,7 +81,7 @@ To check the download, compare it against `SHA256SUMS.txt` from the same
 release:
 
 ```powershell
-Get-FileHash .\OpenReader-v1.1.0-windows-x86_64-setup.exe -Algorithm SHA256
+Get-FileHash .\OpenReader-v1.1.1-windows-x86_64-setup.exe -Algorithm SHA256
 ```
 
 ### Installer or portable?
@@ -124,7 +124,7 @@ pointed a file type at another program, that choice survives.
 For unattended installs:
 
 ```bat
-OpenReader-v1.1.0-windows-x86_64-setup.exe /VERYSILENT /ASSOC=.epub,.cbz
+OpenReader-v1.1.1-windows-x86_64-setup.exe /VERYSILENT /ASSOC=.epub,.cbz
 ```
 
 `/ASSOC=` accepts `none`, `all`, `suggested` (the default) or a list of
@@ -348,6 +348,16 @@ What rests on what evidence:
 
 GNU General Public License v3.0 or later — see [LICENSE](LICENSE).
 
-The interface uses Qt through PySide6 under the LGPL v3. Because PySide6 is
-linked dynamically the LGPL conditions are met; the Qt libraries sit in the
-bundle as separate files and can be replaced.
+The interface uses Qt through PySide6 under the LGPL v3 — the text is in
+[licenses/LGPL-3.0.txt](licenses/LGPL-3.0.txt). Both licence texts travel
+inside every build and are shown under *Help → Licences*. The installer puts a
+second copy in `licenses\` beside the program, and shows the GPL during setup.
+
+The Qt libraries are shipped as separate files. In the installed build they can
+be replaced where they lie; in the portable single file they are packed into
+the executable, so replacing Qt there means rebuilding — which this program's
+licence permits and its source makes possible.
+
+Unmodified sources of the libraries:
+[Qt](https://download.qt.io/official_releases/qt/) ·
+[PySide6](https://download.qt.io/official_releases/QtForPython/).

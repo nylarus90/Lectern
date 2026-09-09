@@ -31,6 +31,7 @@ from ..storage.db import Library
 from ..storage.settings import DEFAULTS, Settings
 from ..version import APP_NAME, __version__
 from .comic_view import ComicView
+from .licences_dialog import LicencesDialog
 from .loader import BookLoader
 from .panels import AnnotationPanel, BookmarkPanel, SearchPanel, TocPanel
 from .pdf_view import PdfView
@@ -249,6 +250,7 @@ class MainWindow(QMainWindow):
         help_menu = menubar.addMenu(tr("&Help"))
         help_menu.addAction(_action(self, tr("Keyboard shortcuts"), QKeySequence.HelpContents,
                                     self.show_shortcuts))
+        help_menu.addAction(_action(self, tr("Licences…"), None, self.show_licences))
         help_menu.addAction(_action(self, tr("About %s") % APP_NAME, None, self.show_about))
 
         # -- toolbar --------------------------------------------------------
@@ -932,6 +934,9 @@ class MainWindow(QMainWindow):
     def show_shortcuts(self) -> None:
         QMessageBox.information(self, tr("Keyboard shortcuts"), shortcut_help())
 
+    def show_licences(self) -> None:
+        LicencesDialog(self).exec()
+
     def show_about(self) -> None:
         QMessageBox.about(
             self, tr("About %s") % APP_NAME,
@@ -939,7 +944,9 @@ class MainWindow(QMainWindow):
                "<p>A free e-book reader for EPUB, Kindle formats, FB2, PDF, "
                "comics, text, Markdown, HTML and RTF.</p>"
                "<p>Licence: GNU GPL v3 or later.<br>"
-               "Interface: Qt (PySide6, LGPL v3).</p>") % (APP_NAME, __version__),
+               "Interface: Qt (PySide6, LGPL v3).</p>"
+               "<p>The full texts are under Help → Licences.</p>")
+            % (APP_NAME, __version__),
         )
 
     def _update_actions(self) -> None:

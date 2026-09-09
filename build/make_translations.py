@@ -21,6 +21,15 @@ import subprocess
 import sys
 import xml.etree.ElementTree as ET
 
+# A Windows console is cp1252 by default, and the strings being reported are
+# exactly the ones full of arrows, ellipses and umlauts.  Printing one of them
+# raised UnicodeEncodeError and took the whole run down *after* the .ts had
+# already been rewritten, which looks like a corrupt file rather than a console
+# limitation.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        _stream.reconfigure(encoding="utf-8", errors="backslashreplace")
+
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 I18N = ROOT / "openreader" / "resources" / "i18n"
 TS = I18N / "openreader_de.ts"

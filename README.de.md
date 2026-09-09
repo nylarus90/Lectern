@@ -83,7 +83,7 @@ Wer die Datei prüfen möchte, vergleicht sie mit `SHA256SUMS.txt` aus demselben
 Release:
 
 ```powershell
-Get-FileHash .\OpenReader-v1.1.0-windows-x86_64-setup.exe -Algorithm SHA256
+Get-FileHash .\OpenReader-v1.1.1-windows-x86_64-setup.exe -Algorithm SHA256
 ```
 
 ### Installer oder portabel?
@@ -129,7 +129,7 @@ zugewiesen, bleibt diese Zuweisung bestehen.
 Für unbeaufsichtigte Installationen:
 
 ```bat
-OpenReader-v1.1.0-windows-x86_64-setup.exe /VERYSILENT /ASSOC=.epub,.cbz
+OpenReader-v1.1.1-windows-x86_64-setup.exe /VERYSILENT /ASSOC=.epub,.cbz
 ```
 
 `/ASSOC=` versteht `none`, `all`, `suggested` (Vorgabe) oder eine Liste von
@@ -361,6 +361,16 @@ Was auf welcher Grundlage geprüft ist:
 
 GNU General Public License v3.0 oder später — siehe [LICENSE](LICENSE).
 
-Die Oberfläche nutzt Qt über PySide6 unter der LGPL v3. Weil PySide6 dynamisch
-gebunden wird, sind die LGPL-Auflagen erfüllt; die Qt-Bibliotheken liegen als
-eigene Dateien im Bündel und lassen sich austauschen.
+Die Oberfläche nutzt Qt über PySide6 unter der LGPL v3 — der Text liegt in
+[licenses/LGPL-3.0.txt](licenses/LGPL-3.0.txt). Beide Lizenztexte stecken in
+jedem Build und stehen unter *Hilfe → Lizenzen*. Der Installer legt zusätzlich
+eine Kopie in `licenses\` neben das Programm und zeigt die GPL beim Einrichten.
+
+Die Qt-Bibliotheken liegen als eigene Dateien vor. In der installierten Fassung
+lassen sie sich an Ort und Stelle austauschen; in der portablen Einzeldatei
+stecken sie in der ausführbaren Datei, dort führt der Weg über einen Neubau —
+den die Lizenz dieses Programms erlaubt und sein Quelltext ermöglicht.
+
+Unveränderte Quellen der Bibliotheken:
+[Qt](https://download.qt.io/official_releases/qt/) ·
+[PySide6](https://download.qt.io/official_releases/QtForPython/).

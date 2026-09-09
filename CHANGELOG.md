@@ -4,14 +4,35 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 1.1.1 — 2026-09-09
 
 ### Fixed
 
+- **The binaries carried no licence text.** Both the GPL and the LGPL ask for a
+  copy of the licence to accompany the program, not merely to sit in the
+  repository — and the LGPL text for Qt was not even there. The About dialog
+  named both licences, which is the notice, not the copy. Every build now
+  carries both texts and shows them under *Help → Licences*; the installer puts
+  a second copy in `licenses\` beside the program. `tests/test_licensing.py`
+  fails the build if a text goes missing or the spec stops collecting it.
+- The README claimed the Qt libraries could be replaced because they lie in the
+  bundle as separate files. That holds for the installed build; in the portable
+  single file they are packed into the executable and replacing them means
+  rebuilding. The LGPL is satisfied either way — the whole application source is
+  available — but the stated reason was wrong for one of the two builds.
 - The README's two copy-paste commands named `OpenReader-1.0.0-…`, while the
   release job names its files after the tag — the real file is
   `OpenReader-v1.0.0-…`. Both commands failed with "file not found" for anyone
   who followed them. A test now compares the names against the version.
+- `build/make_translations.py` crashed when reporting an untranslated string
+  that contained an arrow or an umlaut: the Windows console is cp1252, and the
+  failure came *after* the `.ts` had been rewritten, which looks like a corrupt
+  file rather than a console limitation.
+
+### Added
+
+- Where the unmodified Qt and PySide6 sources can be obtained, in the licence
+  window and in both READMEs, as the LGPL asks.
 
 ## 1.1.0 — 2026-09-09
 

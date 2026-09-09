@@ -119,6 +119,13 @@ Name: "desktopicon"; Description: "{cm:DesktopIcon}"; GroupDescription: "{cm:Add
 Source: "{#SourceDir}\{#ExeName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#SourceDir}\*"; DestDir: "{app}"; Excludes: "{#ExeName}"; \
     Flags: ignoreversion recursesubdirs createallsubdirs
+; The texts already travel inside the bundle, but there they sit six
+; levels down beside the Python resources.  A second copy next to the
+; program is where anyone actually looks for a licence.  Inno fails the
+; build if this pattern matches nothing, which is the guard against
+; shipping without one.
+Source: "{#SourceDir}\_internal\openreader\resources\licenses\*"; \
+    DestDir: "{app}\licenses"; Flags: ignoreversion
 
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#ExeName}"

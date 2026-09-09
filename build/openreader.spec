@@ -109,7 +109,28 @@ def _translations():
     return entries
 
 
-analysis.datas = TOC(list(analysis.datas) + _translations())
+def _licences():
+    """The licence texts, carried inside every build.
+
+    Three of the four release files are a single executable. A licence text
+    that exists only in the repository does not accompany those in any sense
+    the GPL or the LGPL would recognise, and Help → Licences has nothing to
+    show. A missing file stops the build rather than producing a package that
+    quietly ships without one.
+    """
+
+    entries = []
+    for name, source in (("GPL-3.0.txt", os.path.join(ROOT, "LICENSE")),
+                         ("LGPL-3.0.txt",
+                          os.path.join(ROOT, "licenses", "LGPL-3.0.txt"))):
+        if not os.path.exists(source):
+            raise SystemExit("Lizenztext fehlt: %s" % source)
+        entries.append((os.path.join("openreader", "resources", "licenses", name),
+                        source, "DATA"))
+    return entries
+
+
+analysis.datas = TOC(list(analysis.datas) + _translations() + _licences())
 
 pyz = PYZ(analysis.pure, analysis.zipped_data, cipher=BLOCK_CIPHER)
 

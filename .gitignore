@@ -15,3 +15,7 @@ build/probe-data/
 *.egg-info/
 _versions/
 example_file/
+build/tools/
+build/dist-onedir/
+build/dist-installer/
+build/work-onedir/

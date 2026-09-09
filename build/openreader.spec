@@ -84,18 +84,19 @@ if sys.platform == "win32" and os.path.exists(os.path.join(ROOT, "build", "icon.
 elif sys.platform == "darwin" and os.path.exists(os.path.join(ROOT, "build", "icon.icns")):
     ICON = os.path.join(ROOT, "build", "icon.icns")
 
-executable = EXE(
-    pyz,
-    analysis.scripts,
-    analysis.binaries,
-    analysis.datas,
-    [],
+#: One file or one directory.  The single file is what makes the download
+#: portable — copy it to a stick and it runs — but it unpacks itself into a
+#: temporary directory on every launch.  An installed copy has no such
+#: constraint and should not pay that cost, so the installer build sets
+#: ``OPENREADER_ONEDIR=1``.
+ONEDIR = os.environ.get("OPENREADER_ONEDIR") == "1"
+
+COMMON = dict(
     name="OpenReader",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
     upx=False,
-    runtime_tmpdir=None,
     # A reader is a GUI program: no console window should flash up on Windows.
     console=False,
     disable_windowed_traceback=False,
@@ -105,6 +106,27 @@ executable = EXE(
     entitlements_file=None,
     icon=ICON,
 )
+
+if ONEDIR:
+    executable = EXE(pyz, analysis.scripts, [], exclude_binaries=True, **COMMON)
+    collected = COLLECT(
+        executable,
+        analysis.binaries,
+        analysis.datas,
+        strip=False,
+        upx=False,
+        name="OpenReader",
+    )
+else:
+    executable = EXE(
+        pyz,
+        analysis.scripts,
+        analysis.binaries,
+        analysis.datas,
+        [],
+        runtime_tmpdir=None,
+        **COMMON,
+    )
 
 if sys.platform == "darwin":
     app = BUNDLE(

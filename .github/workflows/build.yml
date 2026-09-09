@@ -138,9 +138,83 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
+  installer:
+    name: Windows-Installer
+    needs: test
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: pip
+
+      - name: Abhängigkeiten installieren
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Symbol erzeugen
+        run: python build/icon.py
+
+      # The runner image ships Inno Setup 6; installing it again would only cost
+      # time.  The fallback is there so a future image change does not silently
+      # drop the installer from the release.
+      - name: Inno Setup bereitstellen
+        run: |
+          if (Test-Path "C:\Program Files (x86)\Inno Setup 6\ISCC.exe") {
+            Write-Host "Inno Setup ist im Runner-Abbild vorhanden."
+          } else {
+            Write-Host "Inno Setup fehlt im Abbild - wird nachinstalliert."
+            choco install innosetup --no-progress -y
+          }
+
+      - name: Installer bauen
+        run: python build/make_installer.py
+
+      - name: Stille Installation prüfen
+        run: |
+          $setup = Get-ChildItem build/dist-installer/*-setup.exe | Select-Object -First 1
+          $target = Join-Path $env:TEMP "OpenReaderCI"
+          $p = Start-Process $setup.FullName -Wait -PassThru -ArgumentList `
+            "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART","/CURRENTUSER",
+            "/DIR=`"$target`"","/ASSOC=.epub,.cbz"
+          if ($p.ExitCode -ne 0) { throw "Installation fehlgeschlagen: $($p.ExitCode)" }
+
+          $exe = Join-Path $target "OpenReader.exe"
+          if (-not (Test-Path $exe)) { throw "OpenReader.exe wurde nicht installiert." }
+          $out = & $exe --version
+          if ($out -notmatch "OpenReader") { throw "Unerwartete Ausgabe: $out" }
+
+          $assoc = (Get-ItemProperty "HKCU:\Software\OpenReader" -Name Associations).Associations
+          if ($assoc -ne ".epub;.cbz;") { throw "Falsche Verknüpfungen: $assoc" }
+          Write-Host "Installiert, Version $out, Verknüpfungen $assoc"
+
+          # An uninstall that leaves registry entries behind is a defect, so the
+          # build checks for it rather than trusting the script.
+          $u = Start-Process (Join-Path $target "unins000.exe") -Wait -PassThru `
+            -ArgumentList "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART"
+          if ($u.ExitCode -ne 0) { throw "Deinstallation fehlgeschlagen: $($u.ExitCode)" }
+          Start-Sleep -Seconds 3
+          if (Test-Path $exe) { throw "Programmdatei blieb nach der Deinstallation liegen." }
+          if (Test-Path "HKCU:\Software\OpenReader") { throw "Registrierungsschlüssel blieb liegen." }
+          $rest = @(Get-ChildItem "HKCU:\Software\Classes" |
+                    Where-Object { $_.PSChildName -like "OpenReader.*" }).Count
+          if ($rest -ne 0) { throw "$rest ProgID(s) blieben liegen." }
+          Write-Host "Deinstallation restlos."
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: OpenReader-windows-installer
+          path: build/dist-installer/*-setup.exe
+          if-no-files-found: error
+          retention-days: 30
+
   release:
     name: Release veröffentlichen
-    needs: build
+    needs: [build, installer]
     if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     permissions:
@@ -167,11 +241,18 @@ jobs:
           files: release/*
           generate_release_notes: true
           body: |
-            Eigenständige Programmdateien — kein Python, keine Installation nötig.
+            Eigenständige Programmdateien — kein Python nötig.
+
+            Für Windows gibt es beides: den **Installer** mit frei wählbaren
+            Dateiverknüpfungen, Startmenü-Eintrag und Deinstallation, oder die
+            **portable Einzeldatei**, die ohne Installation von einem USB-Stick
+            läuft. Der Installer startet schneller (kein Entpacken bei jedem
+            Start), die Einzeldatei hinterlässt dafür keine Spuren.
 
             | Plattform | Datei |
             |---|---|
-            | Windows 10/11 (x64) | `OpenReader-${{ github.ref_name }}-windows-x86_64.exe` |
+            | Windows 10/11 (x64), Installer | `OpenReader-${{ github.ref_name }}-windows-x86_64-setup.exe` |
+            | Windows 10/11 (x64), portabel | `OpenReader-${{ github.ref_name }}-windows-x86_64.exe` |
             | macOS (Apple Silicon) | `OpenReader-${{ github.ref_name }}-macos-arm64.zip` |
             | Linux (x64, glibc ≥ 2.35) | `OpenReader-${{ github.ref_name }}-linux-x86_64` |
 

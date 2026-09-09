@@ -1,7 +1,8 @@
 # OpenReader
 
-Ein freier E-Book-Reader als **eine einzige Programmdatei** — kein Installer,
-keine Laufzeitumgebung, kein Browser. Herunterladen, starten, lesen.
+Ein freier E-Book-Reader — keine Laufzeitumgebung, kein Browser, keine
+Abhängigkeiten. Als **portable Einzeldatei** zum Herunterladen und Starten,
+für Windows wahlweise als **Installer** mit frei wählbaren Dateiverknüpfungen.
 
 ![Lizenz](https://img.shields.io/badge/Lizenz-GPL--3.0--or--later-blue)
 ![Python](https://img.shields.io/badge/Python-3.10%2B-blue)
@@ -40,13 +41,64 @@ benannte AZW3-Datei wird trotzdem korrekt geöffnet.
 
 ## Installation
 
-Es gibt keine. Datei herunterladen, ausführen.
+Für Windows gibt es beides — für alles andere reicht die Programmdatei.
 
 | Plattform | Datei | Hinweis |
 |---|---|---|
-| Windows 10/11 (x64) | `OpenReader-*-windows-x86_64.exe` | Doppelklick |
+| Windows 10/11 (x64) | `OpenReader-*-windows-x86_64-setup.exe` | Installer mit wählbaren Dateiverknüpfungen |
+| Windows 10/11 (x64) | `OpenReader-*-windows-x86_64.exe` | portabel, Doppelklick, keine Installation |
 | macOS (Apple Silicon) | `OpenReader-*-macos-arm64.zip` | Entpacken, dann Rechtsklick → „Öffnen“ (nicht signiert) |
 | Linux (x64, glibc ≥ 2.35) | `OpenReader-*-linux-x86_64` | `chmod +x` und starten |
+
+### Installer oder portabel?
+
+| | Installer | Portable Datei |
+|---|---|---|
+| Start bis zum Fenster | **351 ms** | 854 ms |
+| Download | 28 MB | 36 MB |
+| Dateiverknüpfungen | ja, frei wählbar | nein |
+| Startmenü, Deinstallation | ja | nein |
+| Administratorrechte | nicht nötig (wahlweise) | nicht nötig |
+| Hinterlässt Spuren | ja, deinstallierbar | keine |
+
+Die portable Datei ist langsamer, weil sie sich bei **jedem** Start in ein
+temporäres Verzeichnis entpackt — genau das macht sie ja portabel. Der
+Installer legt die Dateien einmal ab und spart sich das.
+
+### Dateiverknüpfungen
+
+Der Installer zeigt eine eigene Seite, auf der **jeder Dateityp einzeln**
+an- und abwählbar ist, mit Schaltflächen für „Empfohlene“, „Alle“ und „Keine“.
+Vorausgewählt sind E-Books und Comic-Archive, weil Windows dafür meist gar
+kein Programm hat. PDF, Text und HTML sind bewusst nicht vorausgewählt — dort
+gibt es fast immer schon ein eingerichtetes Programm.
+
+Was der Installer dabei tut, hängt vom Dateityp ab, und das ist keine
+Willkür, sondern die Grenze, die Windows zieht:
+
+- **Typ hatte noch kein Programm** (`.mobi`, `.azw3`, `.fb2`, `.cbz` …) →
+  OpenReader wird der Standard.
+- **Typ hat bereits ein Programm** (`.pdf`, `.txt`, oft `.epub`) → OpenReader
+  kommt zu „Öffnen mit“ und in die Windows-Standard-Apps hinzu; der
+  vorhandene Standard bleibt unangetastet.
+
+Windows 10 und 11 lassen ein Setup-Programm den Standard nicht erzwingen, und
+das ist gut so. Zum Umstellen: **Einstellungen → Apps → Standard-Apps →
+OpenReader**.
+
+Die Deinstallation nimmt die Verknüpfungen wieder zurück — aber nur die
+eigenen. Haben Sie einen Dateityp inzwischen einem anderen Programm
+zugewiesen, bleibt diese Zuweisung bestehen.
+
+Für unbeaufsichtigte Installationen:
+
+```bat
+OpenReader-1.0.0-windows-x86_64-setup.exe /VERYSILENT /ASSOC=.epub,.cbz
+```
+
+`/ASSOC=` versteht `none`, `all`, `suggested` (Vorgabe) oder eine Liste von
+Endungen. Mit `/CURRENTUSER` beziehungsweise `/ALLUSERS` lässt sich der
+Installationsumfang festlegen, mit `/DIR=` das Zielverzeichnis.
 
 ### Portabel auf USB-Stick
 
@@ -102,6 +154,7 @@ python tests/smoke_gui.py --visible      # Screenshots aller Ansichten
 python tests/bench_reader.py             # Scroll-Leistung messen
 python tests/bench_prefetch.py --book X  # Restruckler beziffern
 pyinstaller build/openreader.spec --noconfirm --distpath build/dist
+python build/make_installer.py           # Windows-Installer (braucht Inno Setup 6)
 ```
 
 Benötigt Python 3.10 oder neuer.

@@ -77,7 +77,7 @@ Das deutet auf eine beschädigte oder absichtlich präparierte Datei hin.</trans
         <location filename="../../formats/comic.py" line="77" />
         <location filename="../../formats/comic.py" line="89" />
         <location filename="../../formats/comic.py" line="179" />
-        <location filename="../../ui/main_window.py" line="664" />
+        <location filename="../../ui/main_window.py" line="670" />
         <location filename="../../ui/pdf_view.py" line="111" />
         <source>Page %d</source>
         <translation>Seite %d</translation>
@@ -442,262 +442,263 @@ Grund: RAR5 lässt sich nicht frei entpacken, und die unrar-Lizenz erlaubt es ni
 %s</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="140" />
+        <location filename="../../ui/main_window.py" line="146" />
         <source>Contents</source>
         <extracomment>Reading position is written at most this often, to spare the disk. (character position, TOC target) pairs, sorted, so the outline can follow along while reading. Empty for page-based views. Guards the storage-failure dialog; the save timer fires every four seconds and must not produce a dialog each time.</extracomment>
         <translation>Inhalt</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="141" />
-        <location filename="../../ui/main_window.py" line="668" />
+        <location filename="../../ui/main_window.py" line="147" />
+        <location filename="../../ui/main_window.py" line="674" />
         <source>Bookmarks</source>
         <translation>Lesezeichen</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="142" />
-        <location filename="../../ui/main_window.py" line="1058" />
+        <location filename="../../ui/main_window.py" line="148" />
+        <location filename="../../ui/main_window.py" line="1157" />
         <source>Notes</source>
         <translation>Notizen</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="143" />
+        <location filename="../../ui/main_window.py" line="149" />
         <source>Search</source>
         <translation>Suche</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="152" />
+        <location filename="../../ui/main_window.py" line="158" />
         <source>&amp;File</source>
         <translation>&amp;Datei</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="153" />
+        <location filename="../../ui/main_window.py" line="159" />
         <source>Open…</source>
         <translation>Öffnen…</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="155" />
+        <location filename="../../ui/main_window.py" line="161" />
         <location filename="../../ui/settings_dialog.py" line="156" />
         <source>Recently opened</source>
         <translation>Zuletzt geöffnet</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="159" />
+        <location filename="../../ui/main_window.py" line="165" />
         <source>Close book</source>
         <translation>Buch schließen</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="162" />
+        <location filename="../../ui/main_window.py" line="168" />
         <source>Export annotations…</source>
         <translation>Anmerkungen exportieren…</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="166" />
+        <location filename="../../ui/main_window.py" line="172" />
         <source>Quit</source>
         <translation>Beenden</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="169" />
+        <location filename="../../ui/main_window.py" line="175" />
         <source>&amp;Navigation</source>
         <translation>&amp;Navigation</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="170" />
+        <location filename="../../ui/main_window.py" line="176" />
         <source>Next page</source>
         <translation>Nächste Seite</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="172" />
+        <location filename="../../ui/main_window.py" line="178" />
         <source>Previous page</source>
         <translation>Vorherige Seite</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="177" />
+        <location filename="../../ui/main_window.py" line="183" />
         <source>Beginning</source>
         <translation>Anfang</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="179" />
+        <location filename="../../ui/main_window.py" line="185" />
         <source>End</source>
         <translation>Ende</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="182" />
+        <location filename="../../ui/main_window.py" line="188" />
         <source>Go to…</source>
         <translation>Gehe zu…</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="185" />
+        <location filename="../../ui/main_window.py" line="191" />
         <source>Find…</source>
         <translation>Suchen…</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="187" />
+        <location filename="../../ui/main_window.py" line="193" />
         <source>Next match</source>
         <translation>Nächster Treffer</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="189" />
+        <location filename="../../ui/main_window.py" line="195" />
         <source>Previous match</source>
         <translation>Vorheriger Treffer</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="195" />
+        <location filename="../../ui/main_window.py" line="201" />
         <source>&amp;Annotations</source>
         <translation>&amp;Anmerkungen</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="196" />
+        <location filename="../../ui/main_window.py" line="202" />
         <source>Add bookmark</source>
         <translation>Lesezeichen setzen</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="199" />
+        <location filename="../../ui/main_window.py" line="205" />
         <source>Highlight selection</source>
         <translation>Auswahl markieren</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="202" />
+        <location filename="../../ui/main_window.py" line="208" />
+        <location filename="../../ui/main_window.py" line="965" />
         <source>Highlight in colour</source>
         <translation>Markieren in Farbe</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="208" />
+        <location filename="../../ui/main_window.py" line="214" />
         <source>Copy selection</source>
         <translation>Auswahl kopieren</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="213" />
+        <location filename="../../ui/main_window.py" line="219" />
         <source>&amp;View</source>
         <translation>&amp;Ansicht</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="214" />
+        <location filename="../../ui/main_window.py" line="220" />
         <location filename="../../ui/settings_dialog.py" line="130" />
         <source>Colour scheme</source>
         <translation>Farbschema</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="227" />
+        <location filename="../../ui/main_window.py" line="233" />
         <source>Zoom in</source>
         <translation>Vergrößern</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="229" />
+        <location filename="../../ui/main_window.py" line="235" />
         <source>Zoom out</source>
         <translation>Verkleinern</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="231" />
+        <location filename="../../ui/main_window.py" line="237" />
         <source>Reset zoom</source>
         <translation>Zoom zurücksetzen</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="235" />
+        <location filename="../../ui/main_window.py" line="241" />
         <source>Sidebar</source>
         <translation>Seitenleiste</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="241" />
+        <location filename="../../ui/main_window.py" line="247" />
         <source>Full screen</source>
         <translation>Vollbild</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="246" />
+        <location filename="../../ui/main_window.py" line="252" />
         <source>Settings…</source>
         <translation>Einstellungen…</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="250" />
+        <location filename="../../ui/main_window.py" line="256" />
         <source>&amp;Help</source>
         <translation>&amp;Hilfe</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="251" />
-        <location filename="../../ui/main_window.py" line="935" />
+        <location filename="../../ui/main_window.py" line="257" />
+        <location filename="../../ui/main_window.py" line="1034" />
         <source>Keyboard shortcuts</source>
         <translation>Tastenkürzel</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="253" />
+        <location filename="../../ui/main_window.py" line="259" />
         <source>Licences…</source>
         <translation>Lizenzen…</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="254" />
-        <location filename="../../ui/main_window.py" line="942" />
+        <location filename="../../ui/main_window.py" line="260" />
+        <location filename="../../ui/main_window.py" line="1041" />
         <source>About %s</source>
         <translation>Über %s</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="311" />
+        <location filename="../../ui/main_window.py" line="317" />
         <source>Open e-book</source>
         <translation>E-Book öffnen</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="322" />
+        <location filename="../../ui/main_window.py" line="328" />
         <source>Opening %s…</source>
         <translation>Öffne %s…</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="415" />
+        <location filename="../../ui/main_window.py" line="421" />
         <source>This PDF is password protected.
 Password:</source>
         <translation>Dieses PDF ist passwortgeschützt.
 Passwort:</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="416" />
+        <location filename="../../ui/main_window.py" line="422" />
         <source>Wrong password. Please try again:</source>
         <translation>Passwort falsch. Bitte erneut versuchen:</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="418" />
+        <location filename="../../ui/main_window.py" line="424" />
         <source>Password required</source>
         <translation>Passwort erforderlich</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="424" />
+        <location filename="../../ui/main_window.py" line="430" />
         <source>The PDF could not be opened with this password.</source>
         <translation>Das PDF konnte mit diesem Passwort nicht geöffnet werden.</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="489" />
+        <location filename="../../ui/main_window.py" line="495" />
         <source>The book could not be opened</source>
         <translation>Buch konnte nicht geöffnet werden</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="569" />
+        <location filename="../../ui/main_window.py" line="575" />
         <source>Go to page</source>
         <translation>Gehe zu Seite</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="569" />
+        <location filename="../../ui/main_window.py" line="575" />
         <source>Page (1–%d):</source>
         <translation>Seite (1–%d):</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="576" />
+        <location filename="../../ui/main_window.py" line="582" />
         <source>Position in the book (%):</source>
         <translation>Position im Buch (%):</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="588" />
-        <location filename="../../ui/main_window.py" line="595" />
+        <location filename="../../ui/main_window.py" line="594" />
+        <location filename="../../ui/main_window.py" line="601" />
         <source>Page %d/%d · %d %%</source>
         <translation>Seite %d/%d · %d %%</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="639" />
+        <location filename="../../ui/main_window.py" line="645" />
         <source>Reading position cannot be saved — the library is not writable.</source>
         <translation>Leseposition kann nicht gespeichert werden — Bibliothek nicht beschreibbar.</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="644" />
+        <location filename="../../ui/main_window.py" line="650" />
         <source>Cannot save</source>
         <translation>Speichern nicht möglich</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="646" />
+        <location filename="../../ui/main_window.py" line="652" />
         <source>The reading position cannot be saved.
 
 The library file is locked or read-only:
@@ -712,78 +713,78 @@ Die Bibliotheksdatei ist gesperrt oder schreibgeschützt:
 Das Lesen funktioniert weiter, aber Positionen, Lesezeichen und Markierungen dieser Sitzung gehen verloren.</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="668" />
+        <location filename="../../ui/main_window.py" line="674" />
         <source>Label:</source>
         <translation>Beschriftung:</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="674" />
+        <location filename="../../ui/main_window.py" line="680" />
         <source>Bookmark added.</source>
         <translation>Lesezeichen gesetzt.</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="685" />
+        <location filename="../../ui/main_window.py" line="691" />
         <source>Select text first, then highlight.</source>
         <translation>Erst Text auswählen, dann markieren.</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="690" />
+        <location filename="../../ui/main_window.py" line="696" />
         <source>Highlight saved.</source>
         <translation>Markierung gespeichert.</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="725" />
+        <location filename="../../ui/main_window.py" line="731" />
         <source>Export annotations</source>
         <translation>Anmerkungen exportieren</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="725" />
+        <location filename="../../ui/main_window.py" line="731" />
         <source>Markdown (*.md);;All files (*)</source>
         <translation>Markdown (*.md);;Alle Dateien (*)</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="733" />
+        <location filename="../../ui/main_window.py" line="739" />
         <source>Export failed</source>
         <translation>Export fehlgeschlagen</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="735" />
+        <location filename="../../ui/main_window.py" line="741" />
         <source>Annotations saved: %s</source>
         <translation>Anmerkungen gespeichert: %s</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="752" />
+        <location filename="../../ui/main_window.py" line="758" />
         <source>p. %d — %s</source>
         <translation>S. %d — %s</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="834" />
+        <location filename="../../ui/main_window.py" line="840" />
         <source>Zoom: fit to width</source>
         <translation>Zoom: an Breite angepasst</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="849" />
+        <location filename="../../ui/main_window.py" line="855" />
         <source>Zoom: %d %%</source>
         <translation>Zoom: %d %%</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="859" />
+        <location filename="../../ui/main_window.py" line="865" />
         <source>Font size: %d pt</source>
         <translation>Schriftgröße: %d pt</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="898" />
+        <location filename="../../ui/main_window.py" line="997" />
         <source>(nothing opened yet)</source>
         <translation>(noch nichts geöffnet)</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="907" />
-        <location filename="../../ui/main_window.py" line="911" />
+        <location filename="../../ui/main_window.py" line="1006" />
+        <location filename="../../ui/main_window.py" line="1010" />
         <source>Clear list</source>
         <translation>Liste leeren</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="912" />
+        <location filename="../../ui/main_window.py" line="1011" />
         <source>Remove all recently opened books?
 
 Reading positions, bookmarks and highlights will be lost.</source>
@@ -792,12 +793,12 @@ Reading positions, bookmarks and highlights will be lost.</source>
 Lesepositionen, Lesezeichen und Markierungen gehen dabei verloren.</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="927" />
+        <location filename="../../ui/main_window.py" line="1026" />
         <source>Open link</source>
         <translation>Link öffnen</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="928" />
+        <location filename="../../ui/main_window.py" line="1027" />
         <source>Open this link in the browser?
 
 %s</source>
@@ -806,12 +807,12 @@ Lesepositionen, Lesezeichen und Markierungen gehen dabei verloren.</translation>
 %s</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="943" />
+        <location filename="../../ui/main_window.py" line="1042" />
         <source>&lt;h3&gt;%s %s&lt;/h3&gt;&lt;p&gt;A free e-book reader for EPUB, Kindle formats, FB2, PDF, comics, text, Markdown, HTML and RTF.&lt;/p&gt;&lt;p&gt;Licence: GNU GPL v3 or later.&lt;br&gt;Interface: Qt (PySide6, LGPL v3).&lt;/p&gt;&lt;p&gt;The full texts are under Help → Licences.&lt;/p&gt;</source>
         <translation>&lt;h3&gt;%s %s&lt;/h3&gt;&lt;p&gt;Ein freier E-Book-Reader für EPUB, Kindle-Formate, FB2, PDF, Comics, Text, Markdown, HTML und RTF.&lt;/p&gt;&lt;p&gt;Lizenz: GNU GPL v3 oder später.&lt;br&gt;Oberfläche: Qt (PySide6, LGPL v3).&lt;/p&gt;&lt;p&gt;Die vollständigen Texte stehen unter Hilfe → Lizenzen.&lt;/p&gt;</translation>
     </message>
     <message>
-        <location filename="../../ui/main_window.py" line="1012" />
+        <location filename="../../ui/main_window.py" line="1111" />
         <source>Reading
     Space / Page Down / →        Next page
     Backspace / Page Up / ←      Previous page
@@ -1058,29 +1059,56 @@ besser aussehen — oder deutlich schlechter. Im Zweifel ausgeschaltet lassen.</
         <translation>Comics</translation>
     </message>
     <message>
-        <location filename="../../ui/settings_dialog.py" line="164" />
+        <location filename="../../ui/settings_dialog.py" line="159" />
+        <source>Automatic</source>
+        <translation>Automatisch</translation>
+    </message>
+    <message>
+        <location filename="../../ui/settings_dialog.py" line="159" />
+        <source>On</source>
+        <translation>An</translation>
+    </message>
+    <message>
+        <location filename="../../ui/settings_dialog.py" line="159" />
+        <source>Off</source>
+        <translation>Aus</translation>
+    </message>
+    <message>
+        <location filename="../../ui/settings_dialog.py" line="163" />
+        <source>Larger buttons and list rows for use with a finger.
+Automatic switches this on when a touch screen is present.</source>
+        <translation>Größere Schaltflächen und Listenzeilen für die Bedienung mit dem Finger.
+Automatisch schaltet das ein, wenn ein Touchscreen vorhanden ist.</translation>
+    </message>
+    <message>
+        <location filename="../../ui/settings_dialog.py" line="169" />
+        <source>Touch operation</source>
+        <translation>Touch-Bedienung</translation>
+    </message>
+    <message>
+        <location filename="../../ui/settings_dialog.py" line="177" />
         <source>Language</source>
         <translation>Sprache</translation>
     </message>
     <message>
-        <location filename="../../ui/settings_dialog.py" line="167" />
+        <location filename="../../ui/settings_dialog.py" line="180" />
         <source>The language takes effect after restarting Lectern.</source>
         <translation>Die Sprache wirkt sich nach einem Neustart von Lectern aus.</translation>
     </message>
     <message>
-        <location filename="../../ui/settings_dialog.py" line="174" />
+        <location filename="../../ui/settings_dialog.py" line="187" />
         <source>Settings and reading progress live in:
 %s</source>
         <translation>Einstellungen und Lesefortschritt liegen unter:
 %s</translation>
     </message>
     <message>
-        <location filename="../../ui/settings_dialog.py" line="208" />
+        <location filename="../../ui/settings_dialog.py" line="221" />
         <source>Reset</source>
         <translation>Zurücksetzen</translation>
     </message>
     <message>
-        <location filename="../../ui/settings_dialog.py" line="208" />
+        <location filename="../../ui/settings_dialog.py" line="221" />
         <source>Reset all display settings?</source>
         <translation>Alle Anzeige-Einstellungen zurücksetzen?</translation>
     </message>

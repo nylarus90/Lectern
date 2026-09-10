@@ -51,6 +51,8 @@ Für Windows gibt es beides — für alles andere reicht die Programmdatei.
 |---|---|---|
 | Windows 10/11 (x64) | `Lectern-*-windows-x86_64-setup.exe` | Installer mit wählbaren Dateiverknüpfungen |
 | Windows 10/11 (x64) | `Lectern-*-windows-x86_64.exe` | portabel, Doppelklick, keine Installation |
+| Windows 11 auf ARM (z. B. Surface Pro 11) | `Lectern-*-windows-arm64-setup.exe` | Installer, nativ für ARM64 |
+| Windows 11 auf ARM | `Lectern-*-windows-arm64.exe` | portabel, nativ für ARM64 |
 | macOS (Apple Silicon) | `Lectern-*-macos-arm64.zip` | Entpacken, dann Rechtsklick → „Öffnen“ (nicht signiert) |
 | Linux (x64, glibc ≥ 2.35) | `Lectern-*-linux-x86_64` | `chmod +x` und starten |
 
@@ -138,6 +140,26 @@ Lectern-v1.2.0-windows-x86_64-setup.exe /VERYSILENT /ASSOC=.epub,.cbz
 Endungen. Ohne Angabe gilt `previous`: Ein Update behält die bisherige
 Auswahl, eine Erstinstallation bekommt die empfohlene. Mit `/CURRENTUSER` beziehungsweise `/ALLUSERS` lässt sich der
 Installationsumfang festlegen, mit `/DIR=` das Zielverzeichnis.
+
+### Tablets: Finger und Stift
+
+Auf einem Touchscreen liest man Lectern mit dem Finger:
+
+| Geste | Wirkung |
+|---|---|
+| Ziehen | Scrollen, mit Schwung |
+| Nach links / rechts wischen | Nächste / vorige Seite |
+| Linkes / rechtes Drittel antippen | Vorige / nächste Seite |
+| Mitte antippen | Im Vollbild: Werkzeugleiste ein- oder ausblenden |
+| Link antippen | Link folgen |
+| Zwei Finger zusammenziehen / spreizen | Schriftgröße; Zoom bei PDFs; Einpassung bei Comics |
+| Langer Druck | Wort markieren, weiterziehen erweitert, dann markieren oder kopieren |
+
+Ein Stift wie der Surface Pen markiert Text wie eine Maus — zum Markieren mit
+dem Stift braucht es also keinen langen Druck. Ist ein Touchscreen vorhanden,
+vergrößert der Touch-Modus Werkzeugleiste und Listenzeilen und ergänzt eine
+Vollbild-Taste, denn ein Tablet hat weder F11 noch Esc. *Einstellungen → Lesen →
+Touch-Bedienung* schaltet ihn fest an, fest aus oder zurück auf automatisch.
 
 ### Portabel auf USB-Stick
 

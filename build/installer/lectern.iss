@@ -41,6 +41,13 @@
 #ifndef LicenseFile
   #define LicenseFile  ""
 #endif
+; Set by make_installer.py from the machine it builds on.
+#ifndef ArchName
+  #define ArchName     "x86_64"
+#endif
+#ifndef ArchAllowed
+  #define ArchAllowed  "x64compatible"
+#endif
 
 [Setup]
 ; Never change AppId: it is how Windows recognises an existing installation and
@@ -63,7 +70,7 @@ DefaultGroupName={#AppName}
 UninstallDisplayName={#AppName} {#AppVersion}
 UninstallDisplayIcon={app}\{#ExeName}
 OutputDir={#OutputDir}
-OutputBaseFilename=Lectern-{#AppVersion}-windows-x86_64-setup
+OutputBaseFilename=Lectern-{#AppVersion}-windows-{#ArchName}-setup
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
@@ -76,8 +83,8 @@ ShowLanguageDialog=auto
 ; default; the wizard still offers a machine-wide install.
 PrivilegesRequired=lowest
 PrivilegesRequiredOverridesAllowed=dialog
-ArchitecturesAllowed=x64compatible
-ArchitecturesInstallIn64BitMode=x64compatible
+ArchitecturesAllowed={#ArchAllowed}
+ArchitecturesInstallIn64BitMode={#ArchAllowed}
 ; Offer to close a running copy instead of failing on a locked file.
 CloseApplications=yes
 RestartApplications=no

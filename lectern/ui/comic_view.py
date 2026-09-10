@@ -103,6 +103,18 @@ class ComicView(QScrollArea):
         self.settings["comic_fit"] = mode
         self.show_page(self._index)
 
+    #: What a pinch steps through, from the whole page to full detail.
+    ZOOM_ORDER = ("page", "width", "original")
+
+    def zoom_step(self, direction: int) -> None:
+        """Pinching out shows more detail, pinching in more of the page."""
+
+        current = self.settings["comic_fit"]
+        index = self.ZOOM_ORDER.index(current) if current in self.ZOOM_ORDER else 1
+        index = max(0, min(len(self.ZOOM_ORDER) - 1, index + direction))
+        if self.ZOOM_ORDER[index] != current:
+            self.set_fit_mode(self.ZOOM_ORDER[index])
+
     def resizeEvent(self, event) -> None:  # noqa: N802 - Qt naming
         super().resizeEvent(event)
         image = self._cache.get(self._index)

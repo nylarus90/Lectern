@@ -51,6 +51,8 @@ Windows gets both options; everywhere else the single executable is enough.
 |---|---|---|
 | Windows 10/11 (x64) | `Lectern-*-windows-x86_64-setup.exe` | Installer with selectable file associations |
 | Windows 10/11 (x64) | `Lectern-*-windows-x86_64.exe` | Portable, double-click, nothing installed |
+| Windows 11 on ARM (e.g. Surface Pro 11) | `Lectern-*-windows-arm64-setup.exe` | Installer, native ARM64 |
+| Windows 11 on ARM | `Lectern-*-windows-arm64.exe` | Portable, native ARM64 |
 | macOS (Apple Silicon) | `Lectern-*-macos-arm64.zip` | Unpack, then right-click → "Open" (unsigned) |
 | Linux (x64, glibc ≥ 2.35) | `Lectern-*-linux-x86_64` | `chmod +x` and run |
 
@@ -133,6 +135,26 @@ Lectern-v1.2.0-windows-x86_64-setup.exe /VERYSILENT /ASSOC=.epub,.cbz
 extensions. Without it, `previous` applies: an update keeps the earlier
 choice, a first install gets the suggested set. `/CURRENTUSER` and `/ALLUSERS` select the install scope, `/DIR=`
 the target directory.
+
+### Tablets: touch and pen
+
+On a touch screen Lectern is read with the finger:
+
+| Gesture | Effect |
+|---|---|
+| Drag | Scroll, with momentum |
+| Swipe left / right | Next / previous page |
+| Tap the left / right third | Previous / next page |
+| Tap in the middle | In full screen: show or hide the toolbar |
+| Tap a link | Follow it |
+| Pinch | Font size; zoom in PDFs; fit mode in comics |
+| Long press | Select a word, drag to extend, then highlight or copy |
+
+A pen, such as the Surface Pen, selects text like a mouse, so highlighting with
+it needs no long press. When a touch screen is present, touch mode enlarges the
+toolbar and the list rows and adds a full-screen button, since a tablet has no
+F11 and no Esc. *Settings → Reading → Touch operation* switches it on, off, or
+back to automatic.
 
 ### Portable on a USB stick
 

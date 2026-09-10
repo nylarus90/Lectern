@@ -155,6 +155,19 @@ class SettingsDialog(QDialog):
         self.recent_box.valueChanged.connect(lambda value: self._set("recent_limit", value))
         form.addRow(tr("Recently opened"), self.recent_box)
 
+        self.touch_box = QComboBox(page)
+        for key, label in (("auto", tr("Automatic")), ("on", tr("On")), ("off", tr("Off"))):
+            self.touch_box.addItem(label, key)
+        self.touch_box.setCurrentIndex(max(0, self.touch_box.findData(self.settings["touch_mode"])))
+        self.touch_box.setToolTip(
+            tr("Larger buttons and list rows for use with a finger.\n"
+               "Automatic switches this on when a touch screen is present.")
+        )
+        self.touch_box.currentIndexChanged.connect(
+            lambda _index: self._set("touch_mode", self.touch_box.currentData())
+        )
+        form.addRow(tr("Touch operation"), self.touch_box)
+
         self.language_box = QComboBox(page)
         for code, _label in i18n.LANGUAGES:
             self.language_box.addItem(i18n.language_label(code), code)
@@ -225,6 +238,7 @@ class SettingsDialog(QDialog):
         self.justify_box.setChecked(DEFAULTS["justify"])
         self.publisher_box.setChecked(DEFAULTS["use_publisher_css"])
         self.theme_box.setCurrentIndex(max(0, self.theme_box.findData(DEFAULTS["theme"])))
+        self.touch_box.setCurrentIndex(max(0, self.touch_box.findData(DEFAULTS["touch_mode"])))
         # The font box was left showing the old family while the setting behind
         # it had already been reset, so dialog and state disagreed.
         self.font_box.blockSignals(True)

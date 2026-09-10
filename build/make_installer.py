@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import platform
 import re
 import subprocess
 import sys
@@ -25,6 +26,13 @@ BUILD = os.path.join(ROOT, "build")
 APP_DIR = os.path.join(BUILD, "dist-onedir", "Lectern")
 OUT_DIR = os.path.join(BUILD, "dist-installer")
 SCRIPT = os.path.join(BUILD, "installer", "lectern.iss")
+
+#: The installer is for the machine it is built on: PyInstaller freezes the
+#: interpreter that runs it, so an ARM64 Python yields an ARM64 program.
+ARCH_NAME = "arm64" if platform.machine().lower() in ("arm64", "aarch64") else "x86_64"
+#: Inno Setup's name for it. An x64 installer also runs on Windows on ARM,
+#: under emulation; an ARM64 one runs nowhere else.
+ARCH_ALLOWED = "arm64" if ARCH_NAME == "arm64" else "x64compatible"
 
 #: Where Inno Setup puts itself, plus the private copy this script can use when
 #: the tool is not installed system-wide.
@@ -86,6 +94,8 @@ def build_installer(iscc: str, version: str) -> str:
     command = [
         iscc,
         "/DAppVersion=%s" % version,
+        "/DArchName=%s" % ARCH_NAME,
+        "/DArchAllowed=%s" % ARCH_ALLOWED,
         "/DSourceDir=%s" % APP_DIR,
         "/DOutputDir=%s" % OUT_DIR,
     ]
@@ -103,7 +113,7 @@ def build_installer(iscc: str, version: str) -> str:
         raise SystemExit("Inno Setup ist fehlgeschlagen (Code %d)." % result.returncode)
 
     expected = os.path.join(
-        OUT_DIR, "Lectern-%s-windows-x86_64-setup.exe" % version)
+        OUT_DIR, "Lectern-%s-windows-%s-setup.exe" % (version, ARCH_NAME))
     if not os.path.exists(expected):
         sys.stdout.write(result.stdout)
         raise SystemExit("Der Setup-Assistent wurde nicht erzeugt: %s" % expected)
@@ -121,7 +131,7 @@ def main() -> int:
         raise SystemExit("Der Windows-Installer lässt sich nur unter Windows bauen.")
 
     version = app_version()
-    print("Lectern %s" % version)
+    print("Lectern %s (%s)" % (version, ARCH_NAME))
 
     iscc = find_iscc(options.iscc)      # checked before the long build step
     if not options.skip_app:

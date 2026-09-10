@@ -1,4 +1,6 @@
 -r requirements.txt
 pytest>=8.0
 pyinstaller>=6.11
-py7zr>=0.21
+# Windows on ARM64 installs py7zr in CI without brotli, which has no build
+# for that platform; see .github/workflows/build.yml.
+py7zr>=0.21; platform_machine != "ARM64"

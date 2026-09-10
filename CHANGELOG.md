@@ -4,6 +4,35 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Added
+
+- **Touch and pen.** A finger scrolls with momentum, swipes and edge taps turn
+  pages, a tap in the middle brings the toolbar back in full screen, links are
+  followed on tap, and a pinch changes the font size — or zooms a PDF, or steps
+  a comic through its fit modes. A long press selects a word, dragging extends
+  the selection, and releasing offers highlight and copy. Lists open their
+  context menu on a long press.
+- A pen, arriving as tablet input, keeps selecting text exactly like the mouse,
+  so on a Surface the pen highlights while the finger scrolls — no mode switch.
+- Touch mode enlarges the toolbar and the list rows and adds a full-screen
+  button, since a tablet has neither F11 nor Esc. It follows the presence of a
+  touch screen by default and can be fixed on or off in the settings.
+- **Windows on ARM64**, native, as a portable file and as an installer. Built,
+  tested and silently installed on GitHub's `windows-11-arm` runner.
+
+### Known limitations
+
+- The gesture thresholds — how long a long press, how far a swipe — were set
+  against simulated touch input. How they feel on glass still has to be tuned
+  on a real device.
+- Nobody on the project owns a Windows-on-ARM machine. The ARM64 build passes
+  the full test suite on GitHub's ARM runner and installs there, but it has not
+  been used for reading.
+- On ARM64, 7z comics compressed with Brotli do not open: the brotli library
+  has no build for that platform. Every other 7z method works.
+
 ## 1.2.0 — 2026-09-10
 
 ### Changed

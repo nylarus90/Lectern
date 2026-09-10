@@ -30,6 +30,7 @@ DEFAULTS: dict[str, Any] = {
     "comic_fit": "width",          # width | height | page | original
     "pdf_zoom_mode": "width",      # width | page | custom
     "pdf_zoom": 1.0,
+    "touch_mode": "auto",          # auto | on | off
 }
 
 #: Presets the view turns into concrete colours.
@@ -55,6 +56,7 @@ CHOICES: dict[str, tuple[str, ...]] = {
     "theme": THEMES,
     "comic_fit": ("width", "height", "page", "original"),
     "pdf_zoom_mode": ("width", "page", "custom"),
+    "touch_mode": ("auto", "on", "off"),
 }
 
 

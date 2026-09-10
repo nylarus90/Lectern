@@ -59,6 +59,9 @@ class ReaderView(QTextBrowser):
         self._search_selections: list[QTextEdit.ExtraSelection] = []
         self._laying_out = False
         self._margins = (-1, -1)
+        #: Word a long press started on. A finger selection never shrinks
+        #: below it, so the first word stays selected while the finger moves.
+        self._touch_span: tuple[int, int] | None = None
 
         self.setReadOnly(True)
         self.setOpenLinks(False)
@@ -336,6 +339,39 @@ class ReaderView(QTextBrowser):
         cursor.setPosition(min(end, document.characterCount() - 1), QTextCursor.KeepAnchor)
         self.setTextCursor(cursor)
         self.ensureCursorVisible()
+
+    # -- touch ------------------------------------------------------------
+    def has_link_at(self, point: QPoint) -> bool:
+        """Whether a tap at ``point`` (viewport coordinates) lands on a link."""
+
+        return bool(self.anchorAt(point))
+
+    def activate_link_at(self, point: QPoint) -> None:
+        """Follow the link under a finger, as a click would."""
+
+        target = self.anchorAt(point)
+        if target:
+            self._on_anchor_clicked(QUrl(target))
+
+    def start_touch_selection(self, point: QPoint) -> None:
+        """A long press selects the word under the finger."""
+
+        cursor = self.cursorForPosition(point)
+        cursor.select(QTextCursor.WordUnderCursor)
+        self._touch_span = (cursor.selectionStart(), cursor.selectionEnd())
+        self.setTextCursor(cursor)
+
+    def extend_touch_selection(self, point: QPoint) -> None:
+        """Grow the selection towards the finger, in either direction."""
+
+        if self._touch_span is None:
+            return
+        position = self.cursorForPosition(point).position()
+        first, last = self._touch_span
+        cursor = self.textCursor()
+        cursor.setPosition(min(first, position))
+        cursor.setPosition(max(last, position), QTextCursor.KeepAnchor)
+        self.setTextCursor(cursor)
 
     def copy_selection(self) -> None:
         clipboard = QGuiApplication.clipboard()

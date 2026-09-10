@@ -5,7 +5,7 @@ from __future__ import annotations
 import bisect
 import os
 
-from PySide6.QtCore import QByteArray, Qt, QTimer, QUrl, Signal
+from PySide6.QtCore import QByteArray, QPoint, QSize, Qt, QTimer, QUrl, Signal
 from PySide6.QtGui import QAction, QActionGroup, QDesktopServices, QKeySequence
 from PySide6.QtWidgets import (
     QApplication,
@@ -14,13 +14,16 @@ from PySide6.QtWidgets import (
     QInputDialog,
     QLabel,
     QLineEdit,
+    QListWidget,
     QMainWindow,
     QMenu,
     QMessageBox,
     QProgressBar,
     QStackedWidget,
+    QStyle,
     QTabWidget,
     QToolBar,
+    QTreeWidget,
 )
 
 from .. import formats
@@ -36,6 +39,7 @@ from .loader import BookLoader
 from .panels import AnnotationPanel, BookmarkPanel, SearchPanel, TocPanel
 from .pdf_view import PdfView
 from .reader_view import ReaderView
+from .touch import TOUCH_ICON_PX, TOUCH_ROW_CSS, LongPressMenu, TouchReader, touch_mode_active
 from .welcome import WelcomeView
 
 #: Reading position is written at most this often, to spare the disk.
@@ -69,6 +73,7 @@ class MainWindow(QMainWindow):
         self._build_docks()
         self._build_actions()
         self._build_statusbar()
+        self._build_touch()
 
         self.loader = BookLoader(self)
         self.loader.progress.connect(self._on_load_progress)
@@ -80,6 +85,7 @@ class MainWindow(QMainWindow):
         self._save_timer.timeout.connect(self._persist_position)
 
         self.apply_theme(self.settings["theme"])
+        self.apply_touch_mode()
         self._restore_window_state()
         self._update_actions()
 
@@ -875,6 +881,98 @@ class MainWindow(QMainWindow):
             self.toolbar.setVisible(False)
         self.action_fullscreen.setChecked(self.isFullScreen())
 
+    # ------------------------------------------------------------------
+    # Touch
+    # ------------------------------------------------------------------
+    def _build_touch(self) -> None:
+        """Finger gestures for the three views, long press for the lists."""
+
+        self.touch_text = TouchReader(self.reader, has_link=self.reader.has_link_at,
+                                      long_press=True)
+        self.touch_comic = TouchReader(self.comic)
+        self.touch_pdf = TouchReader(self.pdf)
+        for touch in (self.touch_text, self.touch_comic, self.touch_pdf):
+            touch.pageRequested.connect(self._turn_page)
+            touch.swiped.connect(self._swipe_page)
+            touch.centreTapped.connect(self._on_centre_tap)
+
+        self.touch_text.linkTapped.connect(self.reader.activate_link_at)
+        self.touch_text.longPressed.connect(self.reader.start_touch_selection)
+        self.touch_text.pressDragged.connect(self.reader.extend_touch_selection)
+        self.touch_text.pressReleased.connect(self._show_selection_menu)
+        self.touch_text.pinched.connect(
+            lambda factor: self.change_font_size(1 if factor > 1 else -1))
+        self.touch_pdf.pinched.connect(self.pdf.zoom_by)
+        self.touch_comic.pinched.connect(
+            lambda factor: self.comic.zoom_step(1 if factor > 1 else -1))
+
+        self._long_press_menus = [
+            LongPressMenu(view) for view in (self.welcome.list, self.bookmark_panel.list,
+                                             self.annotation_panel.list)
+        ]
+
+        # Full screen hides the menu bar and the toolbar, and a tablet has no
+        # F11 and no Esc. In touch mode the toolbar therefore carries the way
+        # back, and a tap in the middle of the page brings the toolbar back.
+        self.action_fullscreen_touch = QAction(self.action_fullscreen.text(), self)
+        self.action_fullscreen_touch.setIcon(self.action_fullscreen.icon())
+        self.action_fullscreen_touch.triggered.connect(self.toggle_fullscreen)
+        self.toolbar.addAction(self.action_fullscreen_touch)
+        self._selection_menu: QMenu | None = None
+
+    def apply_touch_mode(self) -> None:
+        """Larger toolbar icons and list rows while touch mode is on."""
+
+        active = touch_mode_active(self.settings["touch_mode"])
+        self.touch_active = active
+        base = self.style().pixelMetric(QStyle.PM_ToolBarIconSize)
+        size = max(base, TOUCH_ICON_PX) if active else base
+        self.toolbar.setIconSize(QSize(size, size))
+        self.action_fullscreen_touch.setVisible(active)
+        for view in self.findChildren(QListWidget) + self.findChildren(QTreeWidget):
+            view.setStyleSheet(TOUCH_ROW_CSS if active else "")
+
+    def _turn_page(self, step: int) -> None:
+        if step > 0:
+            self.next_page()
+        else:
+            self.previous_page()
+
+    def _swipe_page(self, step: int) -> None:
+        """A swipe turns a whole page, even inside a tall comic page."""
+
+        view = self.active_view
+        if view is self.comic or view is self.pdf:
+            view.go_to_page(view.current_page - 1 + step)
+        else:
+            self._turn_page(step)
+
+    def _on_centre_tap(self) -> None:
+        if self.isFullScreen():
+            self.toolbar.setVisible(not self.toolbar.isVisible())
+
+    def _show_selection_menu(self, point: QPoint) -> None:
+        """What a finger can do with the text it just selected.
+
+        Opened with ``popup`` rather than ``exec``: a nested event loop inside a
+        touch sequence would hold the finger's remaining events hostage.
+        """
+
+        if not self.reader.textCursor().hasSelection():
+            return
+        menu = QMenu(self)
+        menu.addAction(self.action_highlight)
+        colours = menu.addMenu(tr("Highlight in colour"))
+        for key, (label, _hexcolour) in theming.HIGHLIGHT_COLOURS.items():
+            colours.addAction(
+                _action(self, label, None, lambda _checked=False, k=key: self.add_highlight(k))
+            )
+        menu.addSeparator()
+        menu.addAction(self.action_copy)
+        menu.setAttribute(Qt.WA_DeleteOnClose)
+        self._selection_menu = menu
+        menu.popup(self.reader.viewport().mapToGlobal(point))
+
     def open_settings(self) -> None:
         from .settings_dialog import SettingsDialog
 
@@ -884,6 +982,7 @@ class MainWindow(QMainWindow):
 
     def _on_settings_changed(self) -> None:
         self.settings.save()
+        self.apply_touch_mode()
         self.reader.restyle()
         if self.active_view is self.comic:
             self.comic.set_fit_mode(self.settings["comic_fit"])

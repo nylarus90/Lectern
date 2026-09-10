@@ -77,6 +77,8 @@ rather than publishing half of it.
 |---|---|
 | `Lectern-vX.Y.Z-windows-x86_64-setup.exe` | `installer` job (Windows runner, Inno Setup) |
 | `Lectern-vX.Y.Z-windows-x86_64.exe` | `build` job (portable single file) |
+| `Lectern-vX.Y.Z-windows-arm64-setup.exe` | `installer` job on `windows-11-arm` |
+| `Lectern-vX.Y.Z-windows-arm64.exe` | `build` job on `windows-11-arm` |
 | `Lectern-vX.Y.Z-macos-arm64.zip` | `build` job |
 | `Lectern-vX.Y.Z-linux-x86_64` | `build` job (built on Ubuntu 22.04 so it runs on newer releases too) |
 | `SHA256SUMS.txt` | `release` job |

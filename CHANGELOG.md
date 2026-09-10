@@ -22,6 +22,13 @@ All notable changes to this project are documented here. The format follows
 - **Windows on ARM64**, native, as a portable file and as an installer. Built,
   tested and silently installed on GitHub's `windows-11-arm` runner.
 
+### Fixed
+
+- "Recently read" could list books in the wrong order: it sorted by the wall
+  clock alone, and a clock that repeats a value or is set back — as happened
+  on GitHub's ARM runner — left two books tied or reversed. The stamp is now
+  kept strictly increasing whatever the clock does.
+
 ### Known limitations
 
 - The gesture thresholds — how long a long press, how far a swipe — were set

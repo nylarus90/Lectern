@@ -137,6 +137,34 @@ def test_settings_reset(tmp_path):
     assert settings["font_size"] == DEFAULTS["font_size"]
 
 
+def test_recent_order_survives_a_stalled_clock(library, monkeypatch):
+    """Two books opened within one clock reading must still come out in order.
+
+    This failed on GitHub's windows-11-arm runner: both books got the same
+    ``last_opened``, and the list came back oldest first.
+    """
+
+    from lectern.storage import db
+
+    monkeypatch.setattr(db, "_clock", lambda: 1_000_000.0)
+    library.remember_book("id1", "/pfad/a.epub", "Buch A", "Autor A", "epub")
+    library.remember_book("id2", "/pfad/b.epub", "Buch B", "Autor B", "epub")
+    assert [entry.ident for entry in library.recent()] == ["id2", "id1"]
+
+
+def test_recent_order_survives_a_clock_stepping_back(library, monkeypatch):
+    """A clock corrected backwards must not push the book being read down."""
+
+    from lectern.storage import db
+
+    readings = iter([2_000_000.0, 1_500_000.0, 1_000_000.0])
+    monkeypatch.setattr(db, "_clock", lambda: next(readings))
+    library.remember_book("id1", "/pfad/a.epub", "Buch A", "Autor A", "epub")
+    library.remember_book("id2", "/pfad/b.epub", "Buch B", "Autor B", "epub")
+    library.save_position("id1", 5, 10)          # reading id1 again
+    assert [entry.ident for entry in library.recent()] == ["id1", "id2"]
+
+
 def test_data_dir_env_override(tmp_path, monkeypatch):
     from lectern.storage import paths
 

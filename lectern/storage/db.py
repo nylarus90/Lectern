@@ -20,6 +20,11 @@ from .paths import database_path, secure_file
 
 SCHEMA_VERSION = 1
 
+#: The wall clock, through a name of its own so tests can stop or rewind it
+#: without bending ``time.time`` for the whole process.
+_clock = time.time
+
+
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS books (
     id           TEXT PRIMARY KEY,
@@ -128,8 +133,23 @@ class Library:
         self.connection.close()
 
     # -- books -----------------------------------------------------------
+    def _stamp(self) -> float:
+        """A last-opened value later than every one already stored.
+
+        Recency is an order, not a clock reading. On a virtual machine the
+        system clock can hand out the same value twice or step back while it
+        is being synchronised, and ``recent()`` sorts by nothing else: on
+        GitHub's ARM runner two books opened back to back came out in the
+        wrong order. The larger of the clock and the newest stored stamp plus
+        a microsecond keeps the order strict whatever the clock does.
+        """
+
+        row = self.connection.execute("SELECT MAX(last_opened) FROM books").fetchone()
+        newest = row[0] if row is not None and row[0] is not None else 0.0
+        return max(_clock(), newest + 1e-6)
+
     def remember_book(self, ident: str, path: str, title: str, authors: str, fmt: str) -> None:
-        now = time.time()
+        now = self._stamp()
         self.connection.execute(
             """INSERT INTO books(id, path, title, authors, format, added, last_opened)
                     VALUES (?, ?, ?, ?, ?, ?, ?)
@@ -178,7 +198,7 @@ class Library:
         try:
             self.connection.execute(
                 "UPDATE books SET position = ?, total = ?, last_opened = ? WHERE id = ?",
-                (int(position), int(total), time.time(), ident),
+                (int(position), int(total), self._stamp(), ident),
             )
             self.connection.commit()
         except sqlite3.Error:

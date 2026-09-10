@@ -31,13 +31,13 @@ for _stream in (sys.stdout, sys.stderr):
         _stream.reconfigure(encoding="utf-8", errors="backslashreplace")
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
-I18N = ROOT / "openreader" / "resources" / "i18n"
-TS = I18N / "openreader_de.ts"
-QM = I18N / "openreader_de.qm"
+I18N = ROOT / "lectern" / "resources" / "i18n"
+TS = I18N / "lectern_de.ts"
+QM = I18N / "lectern_de.qm"
 GERMAN = ROOT / "build" / "i18n_de.json"
 
-#: Must match openreader.i18n.CONTEXT.
-CONTEXT = "OpenReader"
+#: Must match lectern.i18n.CONTEXT.
+CONTEXT = "Lectern"
 
 
 def tool(name: str) -> str:
@@ -56,7 +56,7 @@ def tool(name: str) -> str:
 
 
 def sources() -> list[str]:
-    return [str(p) for p in sorted((ROOT / "openreader").rglob("*.py"))
+    return [str(p) for p in sorted((ROOT / "lectern").rglob("*.py"))
             if "_versions" not in p.parts]
 
 

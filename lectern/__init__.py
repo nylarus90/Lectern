@@ -1,4 +1,4 @@
-"""OpenReader — a free e-book reader for the common formats."""
+"""Lectern — a free e-book reader for the common formats."""
 
 from .version import APP_NAME, __version__
 

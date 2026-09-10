@@ -19,7 +19,7 @@ import re
 
 import pytest
 
-from openreader.version import __version__
+from lectern.version import __version__
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
@@ -46,7 +46,7 @@ def test_release_tag_matches_version() -> None:
     tag = os.environ.get("GITHUB_REF_NAME", "")
     assert tag.startswith("v"), "release tags are expected to start with v"
     assert tag[1:] == __version__, (
-        "tag %s does not match __version__ %s — bump openreader/version.py and "
+        "tag %s does not match __version__ %s — bump lectern/version.py and "
         "pyproject.toml before tagging" % (tag, __version__)
     )
 
@@ -68,10 +68,10 @@ def test_readme_examples_name_a_file_that_will_exist() -> None:
     they went on drifting with every release.
     """
 
-    expected = "OpenReader-v%s-windows-x86_64-setup.exe" % __version__
+    expected = "Lectern-v%s-windows-x86_64-setup.exe" % __version__
     for name in ("README.md", "README.de.md"):
         text = (ROOT / name).read_text(encoding="utf-8")
-        stale = re.findall(r"OpenReader-v?\d+\.\d+\.\d+-windows-x86_64-setup\.exe",
+        stale = re.findall(r"(?:Lectern|OpenReader)-v?\d+\.\d+\.\d+-windows-x86_64-setup\.exe",
                            text)
         assert stale, "%s names no installer file any more" % name
         assert set(stale) == {expected}, (

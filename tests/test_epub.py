@@ -1,7 +1,7 @@
 import pytest
 
-from openreader.formats import epub
-from openreader.formats.base import BookKind, DRMError
+from lectern.formats import epub
+from lectern.formats.base import BookKind, DRMError
 
 from . import make_samples
 

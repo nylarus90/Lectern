@@ -2,8 +2,8 @@ import struct
 
 import pytest
 
-from openreader.formats import mobi
-from openreader.formats.base import DRMError, LoadError
+from lectern.formats import mobi
+from lectern.formats.base import DRMError, LoadError
 
 from . import make_samples
 
@@ -127,7 +127,7 @@ def test_base32_decoding():
 
 
 def test_detection_routes_azw3_to_the_kindle_loader():
-    from openreader import formats
+    from lectern import formats
 
     path = make_samples.make_azw3()
     assert formats.detect(path) == "mobi"

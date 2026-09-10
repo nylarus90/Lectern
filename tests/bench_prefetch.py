@@ -46,14 +46,14 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--book", required=True)
     options = parser.parse_args()
-    os.environ["OPENREADER_DATA_DIR"] = tempfile.mkdtemp(prefix="openreader-prefetch-")
+    os.environ["LECTERN_DATA_DIR"] = tempfile.mkdtemp(prefix="lectern-prefetch-")
 
     from PySide6.QtWidgets import QApplication
 
-    from openreader.storage.db import Library
-    from openreader.storage.settings import Settings
-    from openreader.ui import reader_view
-    from openreader.ui.main_window import MainWindow
+    from lectern.storage.db import Library
+    from lectern.storage.settings import Settings
+    from lectern.ui import reader_view
+    from lectern.ui.main_window import MainWindow
 
     decodes = {"count": 0, "ms": 0.0, "sizes": []}
     original_decode = reader_view._BookDocument._decode

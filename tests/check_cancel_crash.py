@@ -19,14 +19,14 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 def main() -> int:
     os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-    os.environ["OPENREADER_DATA_DIR"] = tempfile.mkdtemp(prefix="openreader-cancel-")
+    os.environ["LECTERN_DATA_DIR"] = tempfile.mkdtemp(prefix="lectern-cancel-")
 
     from PySide6.QtWidgets import QApplication
 
-    from openreader.storage.db import Library
-    from openreader.storage.settings import Settings
-    from openreader.ui import loader as loader_module
-    from openreader.ui.main_window import MainWindow
+    from lectern.storage.db import Library
+    from lectern.storage.settings import Settings
+    from lectern.ui import loader as loader_module
+    from lectern.ui.main_window import MainWindow
 
     # A loader that blocks far longer than the old three-second wait, so the
     # worker is guaranteed to still be running when cancel() arrives.

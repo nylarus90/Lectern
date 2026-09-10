@@ -22,9 +22,9 @@ import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 BUILD = os.path.join(ROOT, "build")
-APP_DIR = os.path.join(BUILD, "dist-onedir", "OpenReader")
+APP_DIR = os.path.join(BUILD, "dist-onedir", "Lectern")
 OUT_DIR = os.path.join(BUILD, "dist-installer")
-SCRIPT = os.path.join(BUILD, "installer", "openreader.iss")
+SCRIPT = os.path.join(BUILD, "installer", "lectern.iss")
 
 #: Where Inno Setup puts itself, plus the private copy this script can use when
 #: the tool is not installed system-wide.
@@ -36,11 +36,11 @@ ISCC_CANDIDATES = (
 
 
 def app_version() -> str:
-    with open(os.path.join(ROOT, "openreader", "version.py"), encoding="utf-8") as handle:
+    with open(os.path.join(ROOT, "lectern", "version.py"), encoding="utf-8") as handle:
         source = handle.read()
     match = re.search(r'__version__\s*=\s*"([^"]+)"', source)
     if not match:
-        raise SystemExit("Version ließ sich aus openreader/version.py nicht lesen.")
+        raise SystemExit("Version ließ sich aus lectern/version.py nicht lesen.")
     return match.group(1)
 
 
@@ -66,9 +66,9 @@ def find_iscc(explicit: str | None) -> str:
 
 def build_app() -> None:
     print("== PyInstaller (Verzeichnisbau) ==")
-    environment = dict(os.environ, OPENREADER_ONEDIR="1")
+    environment = dict(os.environ, LECTERN_ONEDIR="1")
     result = subprocess.run(
-        [sys.executable, "-m", "PyInstaller", os.path.join(BUILD, "openreader.spec"),
+        [sys.executable, "-m", "PyInstaller", os.path.join(BUILD, "lectern.spec"),
          "--noconfirm", "--clean",
          "--distpath", os.path.join(BUILD, "dist-onedir"),
          "--workpath", os.path.join(BUILD, "work-onedir")],
@@ -76,8 +76,8 @@ def build_app() -> None:
     )
     if result.returncode != 0:
         raise SystemExit("PyInstaller ist fehlgeschlagen.")
-    if not os.path.exists(os.path.join(APP_DIR, "OpenReader.exe")):
-        raise SystemExit("PyInstaller hat keine OpenReader.exe erzeugt: %s" % APP_DIR)
+    if not os.path.exists(os.path.join(APP_DIR, "Lectern.exe")):
+        raise SystemExit("PyInstaller hat keine Lectern.exe erzeugt: %s" % APP_DIR)
 
 
 def build_installer(iscc: str, version: str) -> str:
@@ -103,7 +103,7 @@ def build_installer(iscc: str, version: str) -> str:
         raise SystemExit("Inno Setup ist fehlgeschlagen (Code %d)." % result.returncode)
 
     expected = os.path.join(
-        OUT_DIR, "OpenReader-%s-windows-x86_64-setup.exe" % version)
+        OUT_DIR, "Lectern-%s-windows-x86_64-setup.exe" % version)
     if not os.path.exists(expected):
         sys.stdout.write(result.stdout)
         raise SystemExit("Der Setup-Assistent wurde nicht erzeugt: %s" % expected)
@@ -121,12 +121,12 @@ def main() -> int:
         raise SystemExit("Der Windows-Installer lässt sich nur unter Windows bauen.")
 
     version = app_version()
-    print("OpenReader %s" % version)
+    print("Lectern %s" % version)
 
     iscc = find_iscc(options.iscc)      # checked before the long build step
     if not options.skip_app:
         build_app()
-    elif not os.path.exists(os.path.join(APP_DIR, "OpenReader.exe")):
+    elif not os.path.exists(os.path.join(APP_DIR, "Lectern.exe")):
         raise SystemExit("--skip-app, aber es gibt keinen Verzeichnisbau in %s" % APP_DIR)
 
     installer = build_installer(iscc, version)

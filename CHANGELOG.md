@@ -4,6 +4,38 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Changed
+
+- **The program is now called Lectern.** "OpenReader" turned out to be taken:
+  another open-source document reader has used the name since January 2025.
+  The trademark registers of the EUIPO and the DPMA show no conflicting mark
+  for software; the only similar EU mark, iLECTERN, covers the design and
+  rental of interactive lecterns.
+- Updating keeps everything. The data folder (`openreader` → `lectern`) is
+  renamed on first start rather than copied; if that fails, the old folder is
+  used as it is and the move is retried on the next start. Portable data
+  (`openreader-data` → `lectern-data`) moves the same way, and
+  `OPENREADER_DATA_DIR` is still honoured next to the new `LECTERN_DATA_DIR`.
+- The Windows installer removes what the old name registered — file types,
+  "Open with" entries, the default-apps entry, the old executable, its
+  shortcuts — and hands the default handler for a type over to Lectern where
+  OpenReader held it. CI rehearses exactly this update on every build.
+
+### Fixed
+
+- An update started the file-type page with the recommended set again, so
+  types the user had deliberately left out were quietly re-ticked. The page
+  now starts with the previous choice, and an unattended update keeps it too:
+  `/ASSOC=previous` is the new default.
+
+### Known limitations
+
+- An installation updated from OpenReader keeps its program folder
+  (`…\Programs\OpenReader`): Windows knows an installation by its AppId, not
+  by its folder. Only a fresh install uses `…\Programs\Lectern`.
+
 ## 1.1.1 — 2026-09-09
 
 ### Fixed

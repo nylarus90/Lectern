@@ -1,4 +1,4 @@
-﻿; Inno Setup script for the OpenReader Windows installer.
+﻿; Inno Setup script for the Lectern Windows installer.
 ;
 ; Built from the *onedir* PyInstaller output, not the single-file one: the
 ; single file unpacks itself into a temporary directory on every launch, which
@@ -14,21 +14,26 @@
 ;
 ; Requires Inno Setup 6.3 or newer.
 ;
-;   ISCC.exe /DSourceDir="...\dist-onedir\OpenReader" /DAppVersion=1.0.0 openreader.iss
+;   ISCC.exe /DSourceDir="...\dist-onedir\Lectern" /DAppVersion=1.0.0 lectern.iss
 
-#define AppName        "OpenReader"
-#define AppPublisher   "OpenReader"
+#define AppName        "Lectern"
+#define AppPublisher   "Lectern"
 ; Shown in the wizard and in the "Programs and Features" entry.  Left empty,
 ; those fields are omitted entirely rather than written as blanks.
-#define AppUrl         "https://github.com/nylarus90/OpenReader"
-#define ExeName        "OpenReader.exe"
-#define ProgIdPrefix   "OpenReader"
+#define AppUrl         "https://github.com/nylarus90/Lectern"
+#define ExeName        "Lectern.exe"
+#define ProgIdPrefix   "Lectern"
+; The names used up to 1.1.1 -- needed only to find and remove what an
+; installation under the old name registered.  Same AppId, so Windows treats
+; installing this over it as an ordinary update.
+#define LegacyName     "OpenReader"
+#define LegacyAppId    "openreader"
 
 #ifndef AppVersion
   #define AppVersion   "0.0.0"
 #endif
 #ifndef SourceDir
-  #error SourceDir muss gesetzt sein (Ordner mit OpenReader.exe)
+  #error SourceDir muss gesetzt sein (Ordner mit Lectern.exe)
 #endif
 #ifndef OutputDir
   #define OutputDir    "."
@@ -58,7 +63,7 @@ DefaultGroupName={#AppName}
 UninstallDisplayName={#AppName} {#AppVersion}
 UninstallDisplayIcon={app}\{#ExeName}
 OutputDir={#OutputDir}
-OutputBaseFilename=OpenReader-{#AppVersion}-windows-x86_64-setup
+OutputBaseFilename=Lectern-{#AppVersion}-windows-x86_64-setup
 Compression=lzma2/max
 SolidCompression=yes
 WizardStyle=modern
@@ -89,10 +94,10 @@ de.DesktopIcon=Symbol auf dem Desktop anlegen
 en.DesktopIcon=Create a desktop icon
 de.AssocTitle=Dateiverknüpfungen
 en.AssocTitle=File associations
-de.AssocSubtitle=Welche Dateien soll OpenReader öffnen können?
-en.AssocSubtitle=Which files should OpenReader be able to open?
-de.AssocIntro=Wählen Sie die Dateitypen aus, die mit OpenReader verknüpft werden sollen. Nicht ausgewählte Typen lassen sich weiterhin über „Öffnen mit“ mit OpenReader öffnen.
-en.AssocIntro=Choose the file types to associate with OpenReader. Types you leave out can still be opened with OpenReader through "Open with".
+de.AssocSubtitle=Welche Dateien soll Lectern öffnen können?
+en.AssocSubtitle=Which files should Lectern be able to open?
+de.AssocIntro=Wählen Sie die Dateitypen aus, die mit Lectern verknüpft werden sollen. Nicht ausgewählte Typen lassen sich weiterhin über „Öffnen mit“ mit Lectern öffnen.
+en.AssocIntro=Choose the file types to associate with Lectern. Types you leave out can still be opened with Lectern through "Open with".
 de.AssocAll=&Alle
 en.AssocAll=&All
 de.AssocNone=&Keine
@@ -107,10 +112,10 @@ de.GroupPdf=PDF — dafür ist meist schon ein Programm eingerichtet
 en.GroupPdf=PDF — you probably already have a handler
 de.GroupText=Text und HTML — konkurriert mit Editor und Browser
 en.GroupText=Text and HTML — competes with your editor and browser
-de.AssocHint=Hinweis: Windows 10 und 11 lassen ein Setup-Programm den Standard nicht erzwingen. Für Typen, die noch kein Programm haben, wird OpenReader zum Standard; sonst erscheint es unter „Öffnen mit“ und in den Windows-Standard-Apps.
-en.AssocHint=Note: Windows 10 and 11 do not let an installer force the default handler. For types with no handler yet OpenReader becomes the default; otherwise it appears under "Open with" and in the Windows default apps settings.
-de.RemoveDataPrompt=Sollen auch Leseposition, Lesezeichen und Notizen gelöscht werden?%n%nWählen Sie „Nein“, wenn Sie OpenReader später erneut installieren möchten.
-en.RemoveDataPrompt=Also delete reading positions, bookmarks and notes?%n%nChoose "No" if you intend to install OpenReader again later.
+de.AssocHint=Hinweis: Windows 10 und 11 lassen ein Setup-Programm den Standard nicht erzwingen. Für Typen, die noch kein Programm haben, wird Lectern zum Standard; sonst erscheint es unter „Öffnen mit“ und in den Windows-Standard-Apps.
+en.AssocHint=Note: Windows 10 and 11 do not let an installer force the default handler. For types with no handler yet Lectern becomes the default; otherwise it appears under "Open with" and in the Windows default apps settings.
+de.RemoveDataPrompt=Sollen auch Leseposition, Lesezeichen und Notizen gelöscht werden?%n%nWählen Sie „Nein“, wenn Sie Lectern später erneut installieren möchten.
+en.RemoveDataPrompt=Also delete reading positions, bookmarks and notes?%n%nChoose "No" if you intend to install Lectern again later.
 
 [Tasks]
 Name: "desktopicon"; Description: "{cm:DesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
@@ -124,8 +129,19 @@ Source: "{#SourceDir}\*"; DestDir: "{app}"; Excludes: "{#ExeName}"; \
 ; program is where anyone actually looks for a licence.  Inno fails the
 ; build if this pattern matches nothing, which is the guard against
 ; shipping without one.
-Source: "{#SourceDir}\_internal\openreader\resources\licenses\*"; \
+Source: "{#SourceDir}\_internal\lectern\resources\licenses\*"; \
     DestDir: "{app}\licenses"; Flags: ignoreversion
+
+; An update from the legacy name keeps its program folder, because Windows
+; knows an installation by its AppId, not by its folder.  Without these lines
+; the old executable, its Python package and its shortcuts would stay beside
+; the new ones -- two start-menu entries, one of them for a program that is
+; never updated again.
+[InstallDelete]
+Type: files; Name: "{app}\{#LegacyName}.exe"
+Type: filesandordirs; Name: "{app}\_internal\{#LegacyAppId}"
+Type: files; Name: "{autoprograms}\{#LegacyName}.lnk"
+Type: files; Name: "{autodesktop}\{#LegacyName}.lnk"
 
 [Icons]
 Name: "{autoprograms}\{#AppName}"; Filename: "{app}\{#ExeName}"
@@ -137,7 +153,7 @@ Filename: "{app}\{#ExeName}"; Description: "{cm:LaunchProgram,{#AppName}}"; \
 
 ; The application's own registration.  Per-extension entries are written from
 ; [Code] instead, because the user picks them one by one on a custom page and a
-; static section cannot express that.  Deleting Software\OpenReader on uninstall
+; static section cannot express that.  Deleting Software\Lectern on uninstall
 ; takes the capability list with it.
 [Registry]
 Root: HKA; Subkey: "Software\Classes\Applications\{#ExeName}"; ValueType: string; ValueName: "FriendlyAppName"; ValueData: "{#AppName}"; Flags: uninsdeletekey
@@ -157,6 +173,7 @@ type
   TAssociation = record
     Ext:      String;    { file extension, with the dot }
     ProgId:   String;    { shared by extensions that are one and the same type }
+    Suffix:   String;    { the ProgId without its prefix, to find the legacy one }
     Desc:     String;    { the type's name, as Explorer will show it }
     Group:    Integer;   { 0 books, 1 comics, 2 pdf, 3 text }
     Suggest:  Boolean;   { ticked when the page first appears }
@@ -167,6 +184,8 @@ var
   AssocPage: TWizardPage;
   AssocList: TNewCheckListBox;
   ItemOf: array[0..ASSOC_COUNT - 1] of Integer;   { index in AssocList }
+  Previous: String;        { the extensions the last install chose }
+  HasPrevious: Boolean;    { false on a first install }
 
 procedure SHChangeNotify(wEventId, uFlags: Integer; dwItem1, dwItem2: Cardinal);
   external 'SHChangeNotify@shell32.dll stdcall';
@@ -183,6 +202,7 @@ procedure Define(Index: Integer; const Ext, ProgId, Desc: String;
 begin
   Assoc[Index].Ext := Ext;
   Assoc[Index].ProgId := '{#ProgIdPrefix}' + ProgId;
+  Assoc[Index].Suffix := ProgId;
   Assoc[Index].Desc := Desc;
   Assoc[Index].Group := Group;
   Assoc[Index].Suggest := Suggest;
@@ -263,6 +283,35 @@ begin
     AssocList.Checked[ItemOf[I]] := Assoc[I].Suggest;
 end;
 
+function RootKey: Integer;
+begin
+  { HKA in [Registry] resolves this automatically; in code it has to be said. }
+  if IsAdminInstallMode then
+    Result := HKEY_LOCAL_MACHINE
+  else
+    Result := HKEY_CURRENT_USER;
+end;
+
+{ An update starts from what the user picked last time.  Before, the page
+  always opened with the recommended set, so every update quietly re-ticked
+  types the user had deliberately left out.  An installation made under the
+  legacy name keeps its choice the same way. }
+procedure LoadPreviousChoice;
+begin
+  HasPrevious := RegQueryStringValue(RootKey, 'Software\{#AppName}', 'Associations', Previous);
+  if not HasPrevious then
+    HasPrevious := RegQueryStringValue(RootKey, 'Software\{#LegacyName}',
+                                       'Associations', Previous);
+end;
+
+function Preselected(Index: Integer): Boolean;
+begin
+  if HasPrevious then
+    Result := Pos(Assoc[Index].Ext + ';', Previous) > 0
+  else
+    Result := Assoc[Index].Suggest;
+end;
+
 procedure CreateAssocPage;
 var
   Intro, Hint: TNewStaticText;
@@ -302,7 +351,7 @@ begin
     for I := 0 to ASSOC_COUNT - 1 do
       if Assoc[I].Group = Group then
         ItemOf[I] := AssocList.AddCheckBox(
-          ListCaption(I), '', 1, Assoc[I].Suggest, True, False, False, nil);
+          ListCaption(I), '', 1, Preselected(I), True, False, False, nil);
   end;
 
   ButtonSuggested := TNewButton.Create(AssocPage);
@@ -346,16 +395,8 @@ end;
 procedure InitializeWizard;
 begin
   BuildTable;
+  LoadPreviousChoice;
   CreateAssocPage;
-end;
-
-function RootKey: Integer;
-begin
-  { HKA in [Registry] resolves this automatically; in code it has to be said. }
-  if IsAdminInstallMode then
-    Result := HKEY_LOCAL_MACHINE
-  else
-    Result := HKEY_CURRENT_USER;
 end;
 
 function Wanted(Index: Integer): Boolean;
@@ -365,17 +406,21 @@ begin
   { An unattended install has no page to read, so /ASSOC= drives it instead:
       /ASSOC=none        nothing
       /ASSOC=all         every supported type
-      /ASSOC=suggested   the same set the page starts with (the default)
+      /ASSOC=suggested   the recommended set
+      /ASSOC=previous    what the last install chose, else the recommended
+                         set -- the default, so an unattended update keeps it
       /ASSOC=.epub,.cbz  exactly these }
   if WizardSilent then
   begin
-    Chosen := LowerCase(ExpandConstant('{param:ASSOC|suggested}'));
+    Chosen := LowerCase(ExpandConstant('{param:ASSOC|previous}'));
     if Chosen = 'none' then
       Result := False
     else if Chosen = 'all' then
       Result := True
     else if Chosen = 'suggested' then
       Result := Assoc[Index].Suggest
+    else if Chosen = 'previous' then
+      Result := Preselected(Index)
     else
       Result := Pos(Assoc[Index].Ext + ',', Chosen + ',') > 0;
   end
@@ -398,7 +443,7 @@ begin
   RegWriteStringValue(Root, 'Software\Classes\' + ProgId + '\shell\open\command', '',
                       '"' + Exe + '" "%1"');
 
-  { OpenWithProgids adds OpenReader to the "Open with" list without taking the
+  { OpenWithProgids adds Lectern to the "Open with" list without taking the
     extension away from whatever already owns it; SupportedTypes makes Explorer
     offer it at all; Capabilities lists it under Windows' default apps, which on
     Windows 10 and 11 is the only supported way for the user to make it the
@@ -412,7 +457,7 @@ begin
   RegWriteStringValue(Root, 'Software\{#AppName}\Capabilities\FileAssociations',
                       Assoc[Index].Ext, ProgId);
 
-  { An extension nobody handles yet gets OpenReader as its default -- this is
+  { An extension nobody handles yet gets Lectern as its default -- this is
     the case Windows still permits, and the whole point for .epub and friends. }
   if not RegValueExists(HKEY_CLASSES_ROOT, Assoc[Index].Ext, '') then
     RegWriteStringValue(Root, 'Software\Classes\' + Assoc[Index].Ext, '', ProgId);
@@ -435,10 +480,37 @@ begin
   RegWriteStringValue(RootKey, 'Software\{#AppName}', 'Associations', Written);
 end;
 
+{ What an installation under the legacy name registered.  Left alone, it
+  would outlive the update: file types pointing at an executable that no longer
+  exists, and a second, dead entry in the default-apps list.  Where the old
+  ProgId was the default for a type, the value is removed here and
+  WriteAssociation then finds the type unclaimed and hands it to the new one --
+  so a user who opened .epub with the old version still does after updating. }
+procedure RemoveLegacyRegistration;
+var
+  Root, I: Integer;
+  Current, Legacy: String;
+begin
+  Root := RootKey;
+  for I := 0 to ASSOC_COUNT - 1 do
+  begin
+    Legacy := '{#LegacyName}' + Assoc[I].Suffix;
+    if RegQueryStringValue(Root, 'Software\Classes\' + Assoc[I].Ext, '', Current) and
+       (Current = Legacy) then
+      RegDeleteValue(Root, 'Software\Classes\' + Assoc[I].Ext, '');
+    RegDeleteValue(Root, 'Software\Classes\' + Assoc[I].Ext + '\OpenWithProgids', Legacy);
+    RegDeleteKeyIncludingSubkeys(Root, 'Software\Classes\' + Legacy);
+  end;
+  RegDeleteKeyIncludingSubkeys(Root, 'Software\Classes\Applications\{#LegacyName}.exe');
+  RegDeleteValue(Root, 'Software\RegisteredApplications', '{#LegacyName}');
+  RegDeleteKeyIncludingSubkeys(Root, 'Software\{#LegacyName}');
+end;
+
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
   if CurStep = ssPostInstall then
   begin
+    RemoveLegacyRegistration;
     RememberChoice;
     RefreshShell;
   end;
@@ -471,7 +543,14 @@ end;
 
 function DataDirectory: String;
 begin
-  Result := ExpandConstant('{userappdata}\openreader');
+  Result := ExpandConstant('{userappdata}\lectern');
+end;
+
+{ Still there if the program was never started after the update -- that first
+  start is when the application adopts it. }
+function LegacyDataDirectory: String;
+begin
+  Result := ExpandConstant('{userappdata}\{#LegacyAppId}');
 end;
 
 procedure CurUninstallStepChanged(CurUninstallStep: TUninstallStep);
@@ -487,10 +566,13 @@ begin
     { Reading positions and notes are the user's work, not ours, so they are
       never removed without being asked -- and the default answer is to keep
       them, because reinstalling is far more common than leaving for good. }
-    if DirExists(DataDirectory) then
+    if DirExists(DataDirectory) or DirExists(LegacyDataDirectory) then
       if SuppressibleMsgBox(ExpandConstant('{cm:RemoveDataPrompt}'),
                             mbConfirmation, MB_YESNO or MB_DEFBUTTON2, IDNO) = IDYES then
+      begin
         DelTree(DataDirectory, True, True, True);
+        DelTree(LegacyDataDirectory, True, True, True);
+      end;
     RefreshShell;
   end;
 end;

@@ -15,8 +15,8 @@ import struct
 
 import pytest
 
-from openreader.formats.base import LoadError
-from openreader.formats.mobi import HuffCdic
+from lectern.formats.base import LoadError
+from lectern.formats.mobi import HuffCdic
 
 
 def build_huff() -> bytes:
@@ -128,7 +128,7 @@ def test_corrupt_stream_stops_instead_of_looping():
 def test_mobi_selects_the_huff_decompressor():
     """Compression id 17480 must route through HUFF/CDIC, not PalmDOC."""
 
-    from openreader.formats import mobi
+    from lectern.formats import mobi
 
     class FakeDB:
         count = 4
@@ -141,7 +141,7 @@ def test_mobi_selects_the_huff_decompressor():
 
 
 def test_unknown_compression_is_reported():
-    from openreader.formats import mobi
+    from lectern.formats import mobi
 
     class FakeDB:
         count = 1

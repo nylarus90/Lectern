@@ -3,8 +3,8 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "openreader"
-version = "1.1.1"
+name = "lectern"
+version = "1.2.0"
 description = "Free e-book reader for EPUB, Kindle formats, FB2, PDF, comics, text, Markdown, HTML and RTF"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -27,20 +27,20 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/nylarus90/OpenReader"
-Repository = "https://github.com/nylarus90/OpenReader"
-Changelog = "https://github.com/nylarus90/OpenReader/blob/main/CHANGELOG.md"
-Issues = "https://github.com/nylarus90/OpenReader/issues"
+Homepage = "https://github.com/nylarus90/Lectern"
+Repository = "https://github.com/nylarus90/Lectern"
+Changelog = "https://github.com/nylarus90/Lectern/blob/main/CHANGELOG.md"
+Issues = "https://github.com/nylarus90/Lectern/issues"
 
 [project.optional-dependencies]
 cb7 = ["py7zr>=0.21"]
 dev = ["pytest>=8.0", "pyinstaller>=6.11", "py7zr>=0.21"]
 
 [project.gui-scripts]
-openreader = "openreader.app:main"
+lectern = "lectern.app:main"
 
 [tool.setuptools.packages.find]
-include = ["openreader*"]
+include = ["lectern*"]
 
 [tool.ruff]
 line-length = 100

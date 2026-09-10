@@ -2,19 +2,19 @@
 <!DOCTYPE TS>
 <TS version="2.1" language="de_DE">
 <context>
-    <name>OpenReader</name>
+    <name>Lectern</name>
     <message>
         <location filename="../../app.py" line="95" />
         <source>The library could not be opened:
 
 %s
 
-OpenReader starts with a temporary location. Books can be read, but reading positions, bookmarks and notes from this session will not be kept.</source>
+Lectern starts with a temporary location. Books can be read, but reading positions, bookmarks and notes from this session will not be kept.</source>
         <translation>Die Bibliothek konnte nicht geöffnet werden:
 
 %s
 
-OpenReader startet mit einem temporären Speicherort. Bücher lassen sich lesen, aber Leseposition, Lesezeichen und Notizen dieser Sitzung werden nicht dauerhaft gespeichert.</translation>
+Lectern startet mit einem temporären Speicherort. Bücher lassen sich lesen, aber Leseposition, Lesezeichen und Notizen dieser Sitzung werden nicht dauerhaft gespeichert.</translation>
     </message>
     <message>
         <location filename="../../formats/__init__.py" line="76" />
@@ -1064,8 +1064,8 @@ besser aussehen — oder deutlich schlechter. Im Zweifel ausgeschaltet lassen.</
     </message>
     <message>
         <location filename="../../ui/settings_dialog.py" line="167" />
-        <source>The language takes effect after restarting OpenReader.</source>
-        <translation>Die Sprache wirkt sich nach einem Neustart von OpenReader aus.</translation>
+        <source>The language takes effect after restarting Lectern.</source>
+        <translation>Die Sprache wirkt sich nach einem Neustart von Lectern aus.</translation>
     </message>
     <message>
         <location filename="../../ui/settings_dialog.py" line="174" />

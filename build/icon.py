@@ -8,7 +8,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtWidgets import QApplication  # noqa: E402
 
-from openreader.app import _icon  # noqa: E402
+from lectern.app import _icon  # noqa: E402
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 

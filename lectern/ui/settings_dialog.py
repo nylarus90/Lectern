@@ -164,7 +164,7 @@ class SettingsDialog(QDialog):
         form.addRow(tr("Language"), self.language_box)
 
         self.language_note = QLabel(
-            tr("The language takes effect after restarting OpenReader."), page)
+            tr("The language takes effect after restarting Lectern."), page)
         self.language_note.setWordWrap(True)
         # Only worth saying once the user has actually changed something.
         self.language_note.setVisible(False)

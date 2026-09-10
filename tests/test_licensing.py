@@ -14,7 +14,7 @@ import pathlib
 
 import pytest
 
-from openreader.licensing import COMPONENTS, SOURCES, licence_text
+from lectern.licensing import COMPONENTS, SOURCES, licence_text
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 
@@ -40,13 +40,13 @@ def test_lgpl_text_is_in_the_repository() -> None:
 def test_the_build_collects_both_texts() -> None:
     """The spec must place the texts where the frozen lookup expects them.
 
-    ``licences_dir()`` resolves to ``openreader/resources/licenses`` inside the
+    ``licences_dir()`` resolves to ``lectern/resources/licenses`` inside the
     bundle; if the spec ever stops copying them there, Help → Licences shows
     the fallback note and the binaries ship without a licence again.
     """
 
-    spec = (ROOT / "build" / "openreader.spec").read_text(encoding="utf-8")
-    assert '"openreader", "resources", "licenses"' in spec
+    spec = (ROOT / "build" / "lectern.spec").read_text(encoding="utf-8")
+    assert '"lectern", "resources", "licenses"' in spec
     for file_name in (entry[2] for entry in COMPONENTS):
         assert file_name in spec, "the spec does not collect %s" % file_name
 

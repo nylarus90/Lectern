@@ -1,4 +1,6 @@
-# OpenReader
+# Lectern
+
+*Formerly OpenReader — renamed in 1.2, see the [changelog](CHANGELOG.md).*
 
 [Deutsch](README.de.md) · **English**
 
@@ -47,10 +49,10 @@ Windows gets both options; everywhere else the single executable is enough.
 
 | Platform | File | Note |
 |---|---|---|
-| Windows 10/11 (x64) | `OpenReader-*-windows-x86_64-setup.exe` | Installer with selectable file associations |
-| Windows 10/11 (x64) | `OpenReader-*-windows-x86_64.exe` | Portable, double-click, nothing installed |
-| macOS (Apple Silicon) | `OpenReader-*-macos-arm64.zip` | Unpack, then right-click → "Open" (unsigned) |
-| Linux (x64, glibc ≥ 2.35) | `OpenReader-*-linux-x86_64` | `chmod +x` and run |
+| Windows 10/11 (x64) | `Lectern-*-windows-x86_64-setup.exe` | Installer with selectable file associations |
+| Windows 10/11 (x64) | `Lectern-*-windows-x86_64.exe` | Portable, double-click, nothing installed |
+| macOS (Apple Silicon) | `Lectern-*-macos-arm64.zip` | Unpack, then right-click → "Open" (unsigned) |
+| Linux (x64, glibc ≥ 2.35) | `Lectern-*-linux-x86_64` | `chmod +x` and run |
 
 ### Language
 
@@ -63,7 +65,7 @@ Qt's own dialog buttons follow along — a German window says "OK" and
 "Abbrechen", not "OK" and "Cancel" — because the build carries Qt's German
 translation alongside its own.
 
-Adding a language means translating one file, `openreader_de.ts`'s sibling, in
+Adding a language means translating one file, `lectern_de.ts`'s sibling, in
 Qt Linguist; `python build/make_translations.py` extracts and compiles it.
 
 ### Windows warns on first launch
@@ -81,7 +83,7 @@ To check the download, compare it against `SHA256SUMS.txt` from the same
 release:
 
 ```powershell
-Get-FileHash .\OpenReader-v1.1.1-windows-x86_64-setup.exe -Algorithm SHA256
+Get-FileHash .\Lectern-v1.2.0-windows-x86_64-setup.exe -Algorithm SHA256
 ```
 
 ### Installer or portable?
@@ -109,14 +111,14 @@ PDF, text and HTML start unticked — those almost always have a handler already
 What the installer does then depends on the file type, and that is not
 arbitrary but the line Windows draws:
 
-- **Type had no handler** (`.mobi`, `.azw3`, `.fb2`, `.cbz` …) → OpenReader
+- **Type had no handler** (`.mobi`, `.azw3`, `.fb2`, `.cbz` …) → Lectern
   becomes the default.
-- **Type already has a handler** (`.pdf`, `.txt`, often `.epub`) → OpenReader is
+- **Type already has a handler** (`.pdf`, `.txt`, often `.epub`) → Lectern is
   added to "Open with" and to the Windows default apps; the existing default is
   left alone.
 
 Windows 10 and 11 do not let an installer force the default handler, and that
-is a good thing. To change it: **Settings → Apps → Default apps → OpenReader**.
+is a good thing. To change it: **Settings → Apps → Default apps → Lectern**.
 
 Uninstalling takes the associations back — but only its own. If you have since
 pointed a file type at another program, that choice survives.
@@ -124,11 +126,12 @@ pointed a file type at another program, that choice survives.
 For unattended installs:
 
 ```bat
-OpenReader-v1.1.1-windows-x86_64-setup.exe /VERYSILENT /ASSOC=.epub,.cbz
+Lectern-v1.2.0-windows-x86_64-setup.exe /VERYSILENT /ASSOC=.epub,.cbz
 ```
 
-`/ASSOC=` accepts `none`, `all`, `suggested` (the default) or a list of
-extensions. `/CURRENTUSER` and `/ALLUSERS` select the install scope, `/DIR=`
+`/ASSOC=` accepts `none`, `all`, `suggested`, `previous` or a list of
+extensions. Without it, `previous` applies: an update keeps the earlier
+choice, a first install gets the suggested set. `/CURRENTUSER` and `/ALLUSERS` select the install scope, `/DIR=`
 the target directory.
 
 ### Portable on a USB stick
@@ -138,13 +141,13 @@ fully portable setup that leaves nothing on the machine, put an empty
 `portable.txt` next to the executable — or start with:
 
 ```bash
-OpenReader --portable
+Lectern --portable
 ```
 
 Any other location works too:
 
 ```bash
-OpenReader --data-dir /path/to/my/data
+Lectern --data-dir /path/to/my/data
 ```
 
 ---
@@ -179,12 +182,12 @@ because books are identified by content rather than by path.
 
 ```bash
 python -m pip install -r requirements-dev.txt
-python -m openreader                     # run
+python -m lectern                     # run
 python -m pytest                         # 174 tests
 python tests/smoke_gui.py --visible      # screenshots of every view
 python tests/bench_reader.py             # measure scrolling performance
 python tests/bench_prefetch.py --book X  # quantify the remaining stutter
-pyinstaller build/openreader.spec --noconfirm --distpath build/dist
+pyinstaller build/lectern.spec --noconfirm --distpath build/dist
 python build/make_installer.py           # Windows installer (needs Inno Setup 6)
 ```
 
@@ -195,7 +198,7 @@ Requires Python 3.10 or newer.
 ## Layout
 
 ```
-openreader/
+lectern/
 ├── formats/     One parser per format → one shared Book model
 ├── render/      HTML5→Qt normalisation, colour schemes, typography
 ├── storage/     SQLite (position, bookmarks, highlights) and settings
@@ -249,15 +252,19 @@ height afterwards — and are centred while we are at it.
 
 ### What is stored, and where
 
-OpenReader sends nothing over the network. Stored locally are the file path,
+Lectern sends nothing over the network. Stored locally are the file path,
 title, author, time of opening, reading position, plus bookmarks, highlights
 and notes — in `library.sqlite3` and `settings.json`:
 
 | Platform | Location |
 |---|---|
-| Windows | `%APPDATA%\openreader` |
-| macOS | `~/Library/Application Support/openreader` |
-| Linux | `$XDG_DATA_HOME/openreader` or `~/.local/share/openreader` |
+| Windows | `%APPDATA%\lectern` |
+| macOS | `~/Library/Application Support/lectern` |
+| Linux | `$XDG_DATA_HOME/lectern` or `~/.local/share/lectern` |
+
+Up to version 1.1.1 the program was called OpenReader and kept its data in a
+folder named `openreader`. Lectern takes that folder over on first start by
+renaming it — reading positions, bookmarks and notes stay as they were.
 
 The directory belongs to your account alone: `0700` on Linux and macOS with
 `0600` for the files, and on Windows an ACL naming only the owner and SYSTEM.

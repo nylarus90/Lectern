@@ -3,7 +3,7 @@
 PDF is a fixed-layout format, so there is nothing to reflow and no HTML to
 build.  The loader only validates the file and lifts what metadata it can from
 the trailer; page rendering, the outline and text search are all handled by
-Qt's own PDF engine in :mod:`openreader.ui.pdf_view`, which keeps the heavy
+Qt's own PDF engine in :mod:`lectern.ui.pdf_view`, which keeps the heavy
 document object on the GUI thread where it belongs.
 """
 

@@ -15,8 +15,8 @@ import zipfile
 
 import pytest
 
-from openreader.formats.base import ExpansionBudget, LoadError, parse_xml
-from openreader.render.html_clean import normalize_ex
+from lectern.formats.base import ExpansionBudget, LoadError, parse_xml
+from lectern.render.html_clean import normalize_ex
 
 from . import make_samples
 
@@ -59,7 +59,7 @@ class TestHiddenElementsDoNotSwallowContent:
         assert truncated, "truncation must be reported, not silent"
 
     def test_truncation_reaches_the_book_as_a_warning(self, tmp_path):
-        from openreader.formats import load
+        from lectern.formats import load
 
         source = make_samples.make_epub("truncation.epub")
         target = str(tmp_path / "truncated.epub")
@@ -87,7 +87,7 @@ class TestExpansionBudget:
             budget.spend(5000, "klein.png")    # reality differs
 
     def test_a_zip_bomb_is_refused(self, tmp_path):
-        from openreader.formats import comic
+        from lectern.formats import comic
 
         path = str(tmp_path / "bombe.cbz")
         with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as zf:
@@ -97,7 +97,7 @@ class TestExpansionBudget:
             comic.load(path)
 
     def test_a_normal_comic_still_opens(self, tmp_path):
-        from openreader.formats import comic
+        from lectern.formats import comic
 
         book = comic.load(make_samples.make_cbz("normal.cbz"))
         assert len(book.images) >= 1
@@ -105,7 +105,7 @@ class TestExpansionBudget:
     def test_forged_huff_count_is_refused(self):
         """A 300-byte file claimed 0x0FFFFFFF table entries and ate 2 GB."""
 
-        from openreader.formats.mobi import _make_decompressor
+        from lectern.formats.mobi import _make_decompressor
 
         class FakeDb:
             count = 12
@@ -127,7 +127,7 @@ class TestDrmDetection:
            '<CipherData><CipherReference URI="OEBPS/ch0.xhtml"/></CipherData></EncryptedData>')
 
     def _build(self, tmp_path, inner):
-        from openreader.formats import load
+        from lectern.formats import load
 
         source = make_samples.make_epub("drm_base.epub")
         target = str(tmp_path / "probe.epub")
@@ -148,7 +148,7 @@ class TestDrmDetection:
 
     @pytest.mark.parametrize("inner_name", ["DRM", "FONT+DRM", "DRM+FONT"])
     def test_content_encryption_is_always_detected(self, tmp_path, inner_name):
-        from openreader.formats.base import DRMError
+        from lectern.formats.base import DRMError
 
         inner = {"DRM": self.DRM,
                  "FONT+DRM": self.FONT + self.DRM,
@@ -162,7 +162,7 @@ class TestDrmDetection:
 class TestDamagedFilesFailGracefully:
     @pytest.mark.parametrize("size", [4, 8, 12, 20, 40, 78, 100])
     def test_truncated_mobi_headers(self, tmp_path, size):
-        from openreader.formats import mobi
+        from lectern.formats import mobi
 
         raw = bytearray(b"\0" * 78)
         raw[60:68] = b"BOOKMOBI"
@@ -180,7 +180,7 @@ class TestDamagedFilesFailGracefully:
         r"{\rtf1\ansi\ansicpg0 x}",
     ])
     def test_rtf_edge_cases(self, source):
-        from openreader.formats.plaintext import rtf_to_html
+        from lectern.formats.plaintext import rtf_to_html
 
         body, _title, _author = rtf_to_html(source)
         assert isinstance(body, str)
@@ -189,7 +189,7 @@ class TestDamagedFilesFailGracefully:
 # -- F-09: an image path must not escape the book's directory ---------------
 class TestImagePathsStayInsideTheBook:
     def test_sibling_directory_with_a_shared_prefix_is_refused(self, tmp_path):
-        from openreader.formats import plaintext
+        from lectern.formats import plaintext
 
         book_dir = tmp_path / "buch"
         secret_dir = tmp_path / "buch_geheim"
@@ -204,7 +204,7 @@ class TestImagePathsStayInsideTheBook:
         assert not book.resources, "a neighbouring directory must stay out of reach"
 
     def test_traversal_is_refused(self, tmp_path):
-        from openreader.formats import plaintext
+        from lectern.formats import plaintext
 
         book_dir = tmp_path / "buch"
         book_dir.mkdir()
@@ -214,7 +214,7 @@ class TestImagePathsStayInsideTheBook:
         assert not plaintext.load_html(str(page)).resources
 
     def test_an_image_beside_the_book_still_loads(self, tmp_path):
-        from openreader.formats import plaintext
+        from lectern.formats import plaintext
 
         (tmp_path / "bild.png").write_bytes(make_samples.PNG)
         page = tmp_path / "b.html"
@@ -259,14 +259,14 @@ class TestSettingsAreClamped:
     def test_out_of_range_values_are_clamped(self, tmp_path, key, value, expected):
         import json
 
-        from openreader.storage.settings import Settings
+        from lectern.storage.settings import Settings
 
         path = tmp_path / "settings.json"
         path.write_text(json.dumps({key: value}), encoding="utf-8")
         assert Settings(str(path))[key] == expected
 
     def test_assignment_is_clamped_too(self, tmp_path):
-        from openreader.storage.settings import Settings
+        from lectern.storage.settings import Settings
 
         settings = Settings(str(tmp_path / "s.json"))
         settings["font_size"] = 99999
@@ -276,7 +276,7 @@ class TestSettingsAreClamped:
 # -- F-07: a failed write must be reported, not swallowed -------------------
 class TestStorageFailureIsVisible:
     def test_save_position_reports_failure(self, tmp_path):
-        from openreader.storage.db import Library
+        from lectern.storage.db import Library
 
         library = Library(str(tmp_path / "lib.sqlite3"))
         library.remember_book("id1", "/pfad/b.epub", "Titel", "Autor", "epub")
@@ -288,7 +288,7 @@ class TestStorageFailureIsVisible:
         assert library.degraded is True
 
     def test_connection_has_a_busy_timeout(self, tmp_path):
-        from openreader.storage.db import Library
+        from lectern.storage.db import Library
 
         library = Library(str(tmp_path / "lib.sqlite3"))
         timeout = library.connection.execute("PRAGMA busy_timeout").fetchone()[0]
@@ -300,18 +300,18 @@ class TestStorageFailureIsVisible:
 class TestDataDirectoryIsPrivate:
     @pytest.mark.skipif(os.name == "nt", reason="POSIX-Rechte gelten unter Windows nicht")
     def test_posix_permissions(self, tmp_path, monkeypatch):
-        from openreader.storage import paths
+        from lectern.storage import paths
 
-        monkeypatch.setenv("OPENREADER_DATA_DIR", str(tmp_path / "daten"))
+        monkeypatch.setenv("LECTERN_DATA_DIR", str(tmp_path / "daten"))
         created = paths.data_dir()
         assert oct(os.stat(created).st_mode & 0o777) == "0o700"
 
     @pytest.mark.skipif(os.name == "nt", reason="POSIX-Rechte gelten unter Windows nicht")
     def test_posix_files(self, tmp_path, monkeypatch):
-        from openreader.storage.db import Library
-        from openreader.storage.settings import Settings
+        from lectern.storage.db import Library
+        from lectern.storage.settings import Settings
 
-        monkeypatch.setenv("OPENREADER_DATA_DIR", str(tmp_path / "daten"))
+        monkeypatch.setenv("LECTERN_DATA_DIR", str(tmp_path / "daten"))
         library = Library()
         settings = Settings()
         settings.save()
@@ -338,12 +338,12 @@ class TestDataDirectoryIsPrivate:
             ["icacls", str(parent), "/grant", "*S-1-5-32-545:(OI)(CI)F"],
             capture_output=True, check=False, timeout=30,
         )
-        target = parent / "openreader-data"
+        target = parent / "lectern-data"
         target.mkdir()                       # exists already, with open rights
 
-        from openreader.storage import paths
+        from lectern.storage import paths
 
-        monkeypatch.setenv("OPENREADER_DATA_DIR", str(target))
+        monkeypatch.setenv("LECTERN_DATA_DIR", str(target))
         paths.data_dir()
 
         listing = subprocess.run(
@@ -356,7 +356,7 @@ class TestDataDirectoryIsPrivate:
     def test_windows_hardening_runs_once(self, tmp_path, monkeypatch):
         """The marker keeps a subprocess off the startup path of every launch."""
 
-        from openreader.storage import paths
+        from lectern.storage import paths
 
         calls = {"n": 0}
         real_run = paths.subprocess.run
@@ -366,7 +366,7 @@ class TestDataDirectoryIsPrivate:
             return real_run(*args, **kwargs)
 
         monkeypatch.setattr(paths.subprocess, "run", counting)
-        monkeypatch.setenv("OPENREADER_DATA_DIR", str(tmp_path / "daten"))
+        monkeypatch.setenv("LECTERN_DATA_DIR", str(tmp_path / "daten"))
         paths.data_dir()
         first = calls["n"]
         paths.data_dir()
@@ -377,9 +377,9 @@ class TestDataDirectoryIsPrivate:
     def test_a_read_only_location_does_not_break_startup(self, tmp_path, monkeypatch):
         """A stick without permissions is a normal home for a portable library."""
 
-        from openreader.storage import paths
+        from lectern.storage import paths
 
-        monkeypatch.setenv("OPENREADER_DATA_DIR", str(tmp_path / "daten"))
+        monkeypatch.setenv("LECTERN_DATA_DIR", str(tmp_path / "daten"))
         monkeypatch.setattr(paths.subprocess, "run", _raise_oserror)
         assert paths.data_dir()              # must not raise
 
@@ -388,7 +388,7 @@ class TestDataDirectoryIsPrivate:
 def test_image_cache_never_exceeds_its_budget():
     from PySide6.QtGui import QImage
 
-    from openreader.ui.reader_view import _ImageCache
+    from lectern.ui.reader_view import _ImageCache
 
     cache = _ImageCache(budget=4 * 1024 * 1024)
     for index in range(12):
@@ -402,8 +402,8 @@ def test_mobi_anchor_insertion_is_linear():
 
     import time
 
-    from openreader.formats.base import Book
-    from openreader.formats.mobi import _build_document
+    from lectern.formats.base import Book
+    from lectern.formats.mobi import _build_document
 
     def run(count: int) -> float:
         body = b"".join(b'<a filepos=%08d>x</a><p>Text</p>' % (i * 40) for i in range(count))

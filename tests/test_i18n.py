@@ -16,7 +16,7 @@ import pytest
 
 ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: Editor backup folders are not part of the project.
-SOURCES = sorted(p for p in (ROOT / "openreader").rglob("*.py")
+SOURCES = sorted(p for p in (ROOT / "lectern").rglob("*.py")
                  if "_versions" not in p.parts)
 
 #: Characters and words that only appear in German text. Deliberately narrow:
@@ -115,17 +115,17 @@ def test_translation_file_is_loadable(tmp_path):
     pytest.importorskip("PySide6.QtCore")
     from PySide6.QtCore import QTranslator
 
-    from openreader import i18n
+    from lectern import i18n
 
-    qm = pathlib.Path(i18n.resources_dir()) / "openreader_de.qm"
+    qm = pathlib.Path(i18n.resources_dir()) / "lectern_de.qm"
     if not qm.exists():
-        pytest.skip("openreader_de.qm not built yet (run build/make_translations.py)")
+        pytest.skip("lectern_de.qm not built yet (run build/make_translations.py)")
     translator = QTranslator()
     assert translator.load(str(qm)), "the compiled translation refuses to load"
 
 
 def test_language_resolution():
-    from openreader import i18n
+    from lectern import i18n
 
     assert i18n.resolve("de") == "de"
     assert i18n.resolve("en") == "en"

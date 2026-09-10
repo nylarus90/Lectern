@@ -4,8 +4,8 @@ import json
 
 import pytest
 
-from openreader.storage.db import Library
-from openreader.storage.settings import DEFAULTS, Settings
+from lectern.storage.db import Library
+from lectern.storage.settings import DEFAULTS, Settings
 
 
 @pytest.fixture
@@ -138,9 +138,9 @@ def test_settings_reset(tmp_path):
 
 
 def test_data_dir_env_override(tmp_path, monkeypatch):
-    from openreader.storage import paths
+    from lectern.storage import paths
 
     target = tmp_path / "portable"
-    monkeypatch.setenv("OPENREADER_DATA_DIR", str(target))
+    monkeypatch.setenv("LECTERN_DATA_DIR", str(target))
     assert paths.data_dir() == str(target)
     assert target.is_dir(), "the directory must be created on demand"

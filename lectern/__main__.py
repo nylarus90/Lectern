@@ -1,4 +1,4 @@
-"""Allows ``python -m openreader``."""
+"""Allows ``python -m lectern``."""
 
 import sys
 

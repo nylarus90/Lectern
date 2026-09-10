@@ -1,4 +1,6 @@
-# OpenReader
+# Lectern
+
+*Früher OpenReader — seit 1.2 umbenannt, siehe [Changelog](CHANGELOG.md).*
 
 **Deutsch** · [English](README.md)
 
@@ -47,10 +49,10 @@ Für Windows gibt es beides — für alles andere reicht die Programmdatei.
 
 | Plattform | Datei | Hinweis |
 |---|---|---|
-| Windows 10/11 (x64) | `OpenReader-*-windows-x86_64-setup.exe` | Installer mit wählbaren Dateiverknüpfungen |
-| Windows 10/11 (x64) | `OpenReader-*-windows-x86_64.exe` | portabel, Doppelklick, keine Installation |
-| macOS (Apple Silicon) | `OpenReader-*-macos-arm64.zip` | Entpacken, dann Rechtsklick → „Öffnen“ (nicht signiert) |
-| Linux (x64, glibc ≥ 2.35) | `OpenReader-*-linux-x86_64` | `chmod +x` und starten |
+| Windows 10/11 (x64) | `Lectern-*-windows-x86_64-setup.exe` | Installer mit wählbaren Dateiverknüpfungen |
+| Windows 10/11 (x64) | `Lectern-*-windows-x86_64.exe` | portabel, Doppelklick, keine Installation |
+| macOS (Apple Silicon) | `Lectern-*-macos-arm64.zip` | Entpacken, dann Rechtsklick → „Öffnen“ (nicht signiert) |
+| Linux (x64, glibc ≥ 2.35) | `Lectern-*-linux-x86_64` | `chmod +x` und starten |
 
 ### Sprache
 
@@ -63,7 +65,7 @@ Qts eigene Dialogschaltflächen ziehen mit — ein deutsches Fenster sagt „OK"
 „Abbrechen", nicht „OK" und „Cancel" —, weil das Paket Qts deutsche Übersetzung
 mitbringt.
 
-Eine weitere Sprache bedeutet: eine Datei neben `openreader_de.ts` in Qt
+Eine weitere Sprache bedeutet: eine Datei neben `lectern_de.ts` in Qt
 Linguist übersetzen; `python build/make_translations.py` erzeugt und übersetzt
 den Rest.
 
@@ -83,7 +85,7 @@ Wer die Datei prüfen möchte, vergleicht sie mit `SHA256SUMS.txt` aus demselben
 Release:
 
 ```powershell
-Get-FileHash .\OpenReader-v1.1.1-windows-x86_64-setup.exe -Algorithm SHA256
+Get-FileHash .\Lectern-v1.2.0-windows-x86_64-setup.exe -Algorithm SHA256
 ```
 
 ### Installer oder portabel?
@@ -113,14 +115,14 @@ Was der Installer dabei tut, hängt vom Dateityp ab, und das ist keine
 Willkür, sondern die Grenze, die Windows zieht:
 
 - **Typ hatte noch kein Programm** (`.mobi`, `.azw3`, `.fb2`, `.cbz` …) →
-  OpenReader wird der Standard.
-- **Typ hat bereits ein Programm** (`.pdf`, `.txt`, oft `.epub`) → OpenReader
+  Lectern wird der Standard.
+- **Typ hat bereits ein Programm** (`.pdf`, `.txt`, oft `.epub`) → Lectern
   kommt zu „Öffnen mit“ und in die Windows-Standard-Apps hinzu; der
   vorhandene Standard bleibt unangetastet.
 
 Windows 10 und 11 lassen ein Setup-Programm den Standard nicht erzwingen, und
 das ist gut so. Zum Umstellen: **Einstellungen → Apps → Standard-Apps →
-OpenReader**.
+Lectern**.
 
 Die Deinstallation nimmt die Verknüpfungen wieder zurück — aber nur die
 eigenen. Haben Sie einen Dateityp inzwischen einem anderen Programm
@@ -129,11 +131,12 @@ zugewiesen, bleibt diese Zuweisung bestehen.
 Für unbeaufsichtigte Installationen:
 
 ```bat
-OpenReader-v1.1.1-windows-x86_64-setup.exe /VERYSILENT /ASSOC=.epub,.cbz
+Lectern-v1.2.0-windows-x86_64-setup.exe /VERYSILENT /ASSOC=.epub,.cbz
 ```
 
-`/ASSOC=` versteht `none`, `all`, `suggested` (Vorgabe) oder eine Liste von
-Endungen. Mit `/CURRENTUSER` beziehungsweise `/ALLUSERS` lässt sich der
+`/ASSOC=` versteht `none`, `all`, `suggested`, `previous` oder eine Liste von
+Endungen. Ohne Angabe gilt `previous`: Ein Update behält die bisherige
+Auswahl, eine Erstinstallation bekommt die empfohlene. Mit `/CURRENTUSER` beziehungsweise `/ALLUSERS` lässt sich der
 Installationsumfang festlegen, mit `/DIR=` das Zielverzeichnis.
 
 ### Portabel auf USB-Stick
@@ -143,13 +146,13 @@ vollständig portablen Betrieb, der nichts auf dem Rechner hinterlässt, eine
 leere Datei `portable.txt` neben die Programmdatei legen — oder starten mit:
 
 ```bash
-OpenReader --portable
+Lectern --portable
 ```
 
 Alternativ ein beliebiger Ablageort:
 
 ```bash
-OpenReader --data-dir /pfad/zu/meinen/daten
+Lectern --data-dir /pfad/zu/meinen/daten
 ```
 
 ---
@@ -184,12 +187,12 @@ Verschieben der Datei, weil Bücher am Inhalt und nicht am Pfad erkannt werden.
 
 ```bash
 python -m pip install -r requirements-dev.txt
-python -m openreader                     # starten
+python -m lectern                     # starten
 python -m pytest                         # 174 Tests
 python tests/smoke_gui.py --visible      # Screenshots aller Ansichten
 python tests/bench_reader.py             # Scroll-Leistung messen
 python tests/bench_prefetch.py --book X  # Restruckler beziffern
-pyinstaller build/openreader.spec --noconfirm --distpath build/dist
+pyinstaller build/lectern.spec --noconfirm --distpath build/dist
 python build/make_installer.py           # Windows-Installer (braucht Inno Setup 6)
 ```
 
@@ -200,7 +203,7 @@ Benötigt Python 3.10 oder neuer.
 ## Aufbau
 
 ```
-openreader/
+lectern/
 ├── formats/     Ein Parser je Format → ein gemeinsames Book-Modell
 ├── render/      HTML5→Qt-Normalisierung, Farbschemata, Typografie
 ├── storage/     SQLite (Position, Lesezeichen, Markierungen) und Einstellungen
@@ -258,15 +261,19 @@ Zeilenhöhe — und werden gleich mittig gesetzt.
 
 ### Welche Daten wo gespeichert werden
 
-OpenReader sendet nichts ins Netz. Lokal gespeichert werden Dateipfad, Titel,
+Lectern sendet nichts ins Netz. Lokal gespeichert werden Dateipfad, Titel,
 Autor, Zeitpunkt des Öffnens, Leseposition sowie Lesezeichen, Markierungen und
 Notizen — in `library.sqlite3` und `settings.json`:
 
 | Plattform | Ort |
 |---|---|
-| Windows | `%APPDATA%\openreader` |
-| macOS | `~/Library/Application Support/openreader` |
-| Linux | `$XDG_DATA_HOME/openreader` bzw. `~/.local/share/openreader` |
+| Windows | `%APPDATA%\lectern` |
+| macOS | `~/Library/Application Support/lectern` |
+| Linux | `$XDG_DATA_HOME/lectern` bzw. `~/.local/share/lectern` |
+
+Bis Version 1.1.1 hieß das Programm OpenReader und legte seine Daten in einem
+Ordner `openreader` ab. Lectern übernimmt ihn beim ersten Start, indem es ihn
+umbenennt — Lesepositionen, Lesezeichen und Notizen bleiben erhalten.
 
 Das Verzeichnis gehört dem eigenen Konto: unter Linux und macOS mit `0700`
 beziehungsweise `0600` für die Dateien, unter Windows über eine ACL, die nur

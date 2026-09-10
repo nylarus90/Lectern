@@ -90,20 +90,20 @@ def _open_storage():
     try:
         return Settings(), Library()
     except (OSError, sqlite3.Error) as exc:
-        fallback = tempfile.mkdtemp(prefix="openreader-")
+        fallback = tempfile.mkdtemp(prefix="lectern-")
         _message_box(
             tr("The library could not be opened:\n\n%s\n\n"
-               "OpenReader starts with a temporary location. Books can be read, "
+               "Lectern starts with a temporary location. Books can be read, "
                "but reading positions, bookmarks and notes from this session "
                "will not be kept.") % exc
         )
-        os.environ["OPENREADER_DATA_DIR"] = fallback
+        os.environ["LECTERN_DATA_DIR"] = fallback
         return Settings(), Library()
 
 
 def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser = _Parser(
-        prog="openreader",
+        prog="lectern",
         # Command-line help is printed before a QApplication exists, so it
         # cannot be translated even in principle. English throughout, which is
         # the convention for a command line anyway.
@@ -125,22 +125,24 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
 
 
 def _resolve_data_dir(args: argparse.Namespace) -> None:
+    from .storage.paths import portable_dir
+
     if args.data_dir:
-        os.environ["OPENREADER_DATA_DIR"] = os.path.abspath(args.data_dir)
+        os.environ["LECTERN_DATA_DIR"] = os.path.abspath(args.data_dir)
         return
     if args.portable:
         # sys.frozen is set by PyInstaller; sys.executable is then the bundle.
         base = os.path.dirname(os.path.abspath(
             sys.executable if getattr(sys, "frozen", False) else sys.argv[0]
         ))
-        os.environ["OPENREADER_DATA_DIR"] = os.path.join(base, "openreader-data")
+        os.environ["LECTERN_DATA_DIR"] = portable_dir(base)
         return
     # A marker file next to the executable also switches on portable mode, which
     # is how a USB stick copy stays self-contained without any command line.
     if getattr(sys, "frozen", False):
         base = os.path.dirname(os.path.abspath(sys.executable))
         if os.path.exists(os.path.join(base, "portable.txt")):
-            os.environ["OPENREADER_DATA_DIR"] = os.path.join(base, "openreader-data")
+            os.environ["LECTERN_DATA_DIR"] = portable_dir(base)
 
 
 def main(argv: list[str] | None = None) -> int:

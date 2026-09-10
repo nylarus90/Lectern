@@ -138,7 +138,7 @@ def _extract_with_tool(path: str, progress, candidates: tuple[str, ...]) -> list
         )
 
     progress(10, tr("Extracting archive with %s…") % tool)
-    with tempfile.TemporaryDirectory(prefix="openreader-") as workdir:
+    with tempfile.TemporaryDirectory(prefix="lectern-") as workdir:
         # ``--`` everywhere, so an archive whose name begins with a dash is
         # read as a file name and not as another option.
         if tool == "unrar":

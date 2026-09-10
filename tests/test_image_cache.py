@@ -21,7 +21,7 @@ pytest.importorskip("PySide6.QtWidgets")
 def book_with_plate(app):
     """A one-chapter book holding a single wide illustration."""
 
-    from openreader.formats.base import Book, BookKind, Chapter
+    from lectern.formats.base import Book, BookKind, Chapter
 
     book = Book(path="probe.epub", kind=BookKind.TEXT)
     book.resources["plate.png"] = make_samples._make_png(1600, 400)
@@ -32,7 +32,7 @@ def book_with_plate(app):
 
 @pytest.fixture
 def document(app, book_with_plate):
-    from openreader.ui.reader_view import _BookDocument
+    from lectern.ui.reader_view import _BookDocument
 
     doc = _BookDocument(book_with_plate)
     doc.setTextWidth(600.0)
@@ -74,7 +74,7 @@ def test_oversized_image_is_scaled_to_the_column(document):
 
 
 def test_small_image_is_left_alone(app, book_with_plate):
-    from openreader.ui.reader_view import _BookDocument
+    from lectern.ui.reader_view import _BookDocument
 
     book_with_plate.resources["small.png"] = make_samples._make_png(80, 60)
     doc = _BookDocument(book_with_plate)
@@ -96,7 +96,7 @@ def test_unknown_resource_falls_through(document):
 
 
 def test_cache_evicts_to_stay_within_budget(app, book_with_plate):
-    from openreader.ui.reader_view import _BookDocument, _ImageCache
+    from lectern.ui.reader_view import _BookDocument, _ImageCache
 
     doc = _BookDocument(book_with_plate)
     doc.setTextWidth(600.0)
@@ -134,10 +134,10 @@ def test_nearby_widths_share_one_rendition(document):
 def test_view_uses_the_caching_document(app, tmp_path):
     """The wiring, not just the class: a real book must get a caching document."""
 
-    from openreader.formats import load
-    from openreader.storage.settings import Settings
-    from openreader.ui.loader import assemble
-    from openreader.ui.reader_view import ReaderView, _BookDocument
+    from lectern.formats import load
+    from lectern.storage.settings import Settings
+    from lectern.ui.loader import assemble
+    from lectern.ui.reader_view import ReaderView, _BookDocument
 
     path = make_samples.make_epub("cache_probe.epub")
     book = load(path)

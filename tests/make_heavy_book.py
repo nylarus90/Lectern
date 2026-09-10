@@ -149,6 +149,6 @@ if __name__ == "__main__":
     import tempfile
 
     target = sys.argv[1] if len(sys.argv) > 1 else os.path.join(
-        tempfile.gettempdir(), "openreader-bench-illustrated.epub")
+        tempfile.gettempdir(), "lectern-bench-illustrated.epub")
     build_illustrated(target)
     print("\n%s: %.1f MB" % (target, os.path.getsize(target) / 1e6))

@@ -1,13 +1,13 @@
 [Desktop Entry]
 Type=Application
-Name=OpenReader
+Name=Lectern
 GenericName=E-Book-Reader
 GenericName[en]=E-book Reader
 Comment=EPUB, Kindle, FB2, PDF, Comics, Text, Markdown, HTML und RTF lesen
 Comment[en]=Read EPUB, Kindle, FB2, PDF, comics, text, Markdown, HTML and RTF
-Exec=OpenReader %f
-Icon=openreader
+Exec=Lectern %f
+Icon=lectern
 Terminal=false
 Categories=Office;Viewer;Literature;
 MimeType=application/epub+zip;application/x-mobipocket-ebook;application/vnd.amazon.ebook;application/x-fictionbook+xml;application/pdf;application/vnd.comicbook+zip;application/vnd.comicbook-rar;application/x-cbz;application/x-cbr;text/plain;text/markdown;text/html;application/xhtml+xml;application/rtf;
-StartupWMClass=OpenReader
+StartupWMClass=Lectern

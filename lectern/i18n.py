@@ -2,7 +2,7 @@
 
 Source strings in this project are English, which is what Qt expects and what
 appears when no translation is loaded. German is shipped as a translation
-alongside, compiled to ``openreader_de.qm``.
+alongside, compiled to ``lectern_de.qm``.
 
 Two translators get installed for a non-English language, not one: ours for the
 application's own text, and Qt's ``qtbase`` for the strings Qt itself supplies —
@@ -20,7 +20,7 @@ from PySide6.QtCore import QCoreApplication, QLibraryInfo, QLocale, QTranslator
 
 #: Translation context for strings outside a QObject. Qt would otherwise use
 #: the class name, which those modules do not have.
-CONTEXT = "OpenReader"
+CONTEXT = "Lectern"
 
 #: Selectable languages: setting value, and the name shown in the settings
 #: dialog. Language names stay in their own language by convention — a German
@@ -62,7 +62,7 @@ def resources_dir() -> str:
         # PyInstaller unpacks data files below _MEIPASS, mirroring the paths
         # given in the spec.
         base = getattr(sys, "_MEIPASS", os.path.dirname(sys.executable))
-        return os.path.join(base, "openreader", "resources", "i18n")
+        return os.path.join(base, "lectern", "resources", "i18n")
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), "resources", "i18n")
 
 
@@ -104,7 +104,7 @@ def install(preference: str = "system") -> str:
         return language     # English is the source; nothing to load
 
     ours = QTranslator()
-    if ours.load("openreader_%s" % language, resources_dir()):
+    if ours.load("lectern_%s" % language, resources_dir()):
         application.installTranslator(ours)
         _INSTALLED.append(ours)
 

@@ -62,14 +62,14 @@ jobs:
       matrix:
         include:
           - os: windows-latest
-            artifact: OpenReader-windows-x86_64
-            binary: build/dist/OpenReader.exe
+            artifact: Lectern-windows-x86_64
+            binary: build/dist/Lectern.exe
           - os: macos-latest
-            artifact: OpenReader-macos-arm64
-            binary: build/dist/OpenReader.app
+            artifact: Lectern-macos-arm64
+            binary: build/dist/Lectern.app
           - os: ubuntu-22.04
-            artifact: OpenReader-linux-x86_64
-            binary: build/dist/OpenReader
+            artifact: Lectern-linux-x86_64
+            binary: build/dist/Lectern
 
     steps:
       - uses: actions/checkout@v4
@@ -100,41 +100,41 @@ jobs:
 
       - name: Binary bauen
         run: >
-          pyinstaller build/openreader.spec --noconfirm --clean
+          pyinstaller build/lectern.spec --noconfirm --clean
           --distpath build/dist --workpath build/work
 
       - name: Start prüfen (Windows)
         if: runner.os == 'Windows'
         run: |
-          $out = & "build/dist/OpenReader.exe" --version
-          if ($out -notmatch "OpenReader") { throw "Unerwartete Ausgabe: $out" }
+          $out = & "build/dist/Lectern.exe" --version
+          if ($out -notmatch "Lectern") { throw "Unerwartete Ausgabe: $out" }
           Write-Host $out
 
       - name: Start prüfen (macOS)
         if: runner.os == 'macOS'
         run: |
-          ./build/dist/OpenReader.app/Contents/MacOS/OpenReader --version
+          ./build/dist/Lectern.app/Contents/MacOS/Lectern --version
 
       - name: Start prüfen (Linux)
         if: runner.os == 'Linux'
         run: |
-          chmod +x build/dist/OpenReader
-          xvfb-run -a ./build/dist/OpenReader --version
+          chmod +x build/dist/Lectern
+          xvfb-run -a ./build/dist/Lectern --version
 
       - name: macOS-Archiv packen
         if: runner.os == 'macOS'
         run: |
           cd build/dist
           # ditto preserves the bundle's symlinks and permissions; zip does not.
-          ditto -c -k --sequesterRsrc --keepParent OpenReader.app OpenReader-macos.zip
+          ditto -c -k --sequesterRsrc --keepParent Lectern.app Lectern-macos.zip
 
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.artifact }}
           path: |
-            build/dist/OpenReader.exe
-            build/dist/OpenReader
-            build/dist/OpenReader-macos.zip
+            build/dist/Lectern.exe
+            build/dist/Lectern
+            build/dist/Lectern-macos.zip
           if-no-files-found: error
           retention-days: 30
 
@@ -177,16 +177,30 @@ jobs:
       - name: Stille Installation prüfen
         run: |
           $setup = Get-ChildItem build/dist-installer/*-setup.exe | Select-Object -First 1
-          $target = Join-Path $env:TEMP "OpenReaderCI"
+          # Pretend an installation from before the rename exists, because that
+          # is the update every existing user will run: its file type as the
+          # default for .epub, its "Open with" entry, its default-apps entry
+          # and its remembered choice.
+          $classes = "HKCU:\Software\Classes"
+          New-Item "$classes\OpenReader.epub\shell\open\command" -Force | Out-Null
+          New-Item "$classes\.epub\OpenWithProgids" -Force | Out-Null
+          New-ItemProperty "$classes\.epub\OpenWithProgids" -Name "OpenReader.epub" -Value "" -Force | Out-Null
+          Set-Item "$classes\.epub" -Value "OpenReader.epub"
+          New-Item "HKCU:\Software\OpenReader" -Force | Out-Null
+          New-ItemProperty "HKCU:\Software\OpenReader" -Name Associations -Value ".epub;.cbz;" -Force | Out-Null
+          New-Item "HKCU:\Software\RegisteredApplications" -Force | Out-Null
+          New-ItemProperty "HKCU:\Software\RegisteredApplications" -Name "OpenReader" -Value "Software\OpenReader\Capabilities" -Force | Out-Null
+
+          $target = Join-Path $env:TEMP "LecternCI"
           $p = Start-Process $setup.FullName -Wait -PassThru -ArgumentList `
             "/VERYSILENT","/SUPPRESSMSGBOXES","/NORESTART","/CURRENTUSER",
-            "/DIR=`"$target`"","/ASSOC=.epub,.cbz"
+            "/DIR=`"$target`""
           if ($p.ExitCode -ne 0) { throw "Installation fehlgeschlagen: $($p.ExitCode)" }
 
-          $exe = Join-Path $target "OpenReader.exe"
-          if (-not (Test-Path $exe)) { throw "OpenReader.exe wurde nicht installiert." }
+          $exe = Join-Path $target "Lectern.exe"
+          if (-not (Test-Path $exe)) { throw "Lectern.exe wurde nicht installiert." }
           $out = & $exe --version
-          if ($out -notmatch "OpenReader") { throw "Unerwartete Ausgabe: $out" }
+          if ($out -notmatch "Lectern") { throw "Unerwartete Ausgabe: $out" }
 
           # The licence texts have to arrive next to the program, not just
           # inside the bundle: v1.1.0 shipped four binaries without one.
@@ -195,8 +209,21 @@ jobs:
             if (-not (Test-Path $path)) { throw "Lizenztext fehlt: $licence" }
           }
 
-          $assoc = (Get-ItemProperty "HKCU:\Software\OpenReader" -Name Associations).Associations
-          if ($assoc -ne ".epub;.cbz;") { throw "Falsche Verknüpfungen: $assoc" }
+          $assoc = (Get-ItemProperty "HKCU:\Software\Lectern" -Name Associations).Associations
+          if ($assoc -ne ".epub;.cbz;") { throw "Auswahl nicht übernommen: $assoc" }
+
+          # The old registration must be gone, not merely outnumbered.
+          if (Test-Path "HKCU:\Software\OpenReader") { throw "Alter Registrierungszweig blieb liegen." }
+          if (Test-Path "$classes\OpenReader.epub") { throw "Alte ProgID blieb liegen." }
+          $owp = Get-ItemProperty "$classes\.epub\OpenWithProgids" -ErrorAction SilentlyContinue
+          if ($owp -and ($owp.PSObject.Properties.Name -contains "OpenReader.epub")) { throw "Alter Öffnen-mit-Eintrag blieb liegen." }
+          $apps = Get-ItemProperty "HKCU:\Software\RegisteredApplications" -ErrorAction SilentlyContinue
+          if ($apps -and ($apps.PSObject.Properties.Name -contains "OpenReader")) { throw "Alter Standard-Apps-Eintrag blieb liegen." }
+          # The default handler passes to the new name -- unless the machine
+          # itself registers one for .epub, in which case nobody may take it.
+          $machine = (Get-ItemProperty "HKLM:\Software\Classes\.epub" -ErrorAction SilentlyContinue).'(default)'
+          $default = (Get-ItemProperty "$classes\.epub" -ErrorAction SilentlyContinue).'(default)'
+          if (-not $machine -and $default -ne "Lectern.epub") { throw "Standard für .epub ging nicht über: $default" }
           Write-Host "Installiert, Version $out, Verknüpfungen $assoc"
 
           # An uninstall that leaves registry entries behind is a defect, so the
@@ -206,15 +233,15 @@ jobs:
           if ($u.ExitCode -ne 0) { throw "Deinstallation fehlgeschlagen: $($u.ExitCode)" }
           Start-Sleep -Seconds 3
           if (Test-Path $exe) { throw "Programmdatei blieb nach der Deinstallation liegen." }
-          if (Test-Path "HKCU:\Software\OpenReader") { throw "Registrierungsschlüssel blieb liegen." }
+          if (Test-Path "HKCU:\Software\Lectern") { throw "Registrierungsschlüssel blieb liegen." }
           $rest = @(Get-ChildItem "HKCU:\Software\Classes" |
-                    Where-Object { $_.PSChildName -like "OpenReader.*" }).Count
+                    Where-Object { $_.PSChildName -like "Lectern.*" }).Count
           if ($rest -ne 0) { throw "$rest ProgID(s) blieben liegen." }
           Write-Host "Deinstallation restlos."
 
       - uses: actions/upload-artifact@v4
         with:
-          name: OpenReader-windows-installer
+          name: Lectern-windows-installer
           path: build/dist-installer/*-setup.exe
           if-no-files-found: error
           retention-days: 30
@@ -236,14 +263,14 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p release
-          cp artefakte/OpenReader-windows-installer/*-setup.exe \
-             release/OpenReader-${{ github.ref_name }}-windows-x86_64-setup.exe
-          cp artefakte/OpenReader-windows-x86_64/OpenReader.exe \
-             release/OpenReader-${{ github.ref_name }}-windows-x86_64.exe
-          cp artefakte/OpenReader-linux-x86_64/OpenReader \
-             release/OpenReader-${{ github.ref_name }}-linux-x86_64
-          cp artefakte/OpenReader-macos-arm64/OpenReader-macos.zip \
-             release/OpenReader-${{ github.ref_name }}-macos-arm64.zip
+          cp artefakte/Lectern-windows-installer/*-setup.exe \
+             release/Lectern-${{ github.ref_name }}-windows-x86_64-setup.exe
+          cp artefakte/Lectern-windows-x86_64/Lectern.exe \
+             release/Lectern-${{ github.ref_name }}-windows-x86_64.exe
+          cp artefakte/Lectern-linux-x86_64/Lectern \
+             release/Lectern-${{ github.ref_name }}-linux-x86_64
+          cp artefakte/Lectern-macos-arm64/Lectern-macos.zip \
+             release/Lectern-${{ github.ref_name }}-macos-arm64.zip
 
           # v1.0.0 shipped without the installer: the copy line was simply
           # missing, every remaining command succeeded, and the release went out
@@ -251,10 +278,10 @@ jobs:
           # step is detectable by "set -e", so the expected set is named here and
           # checked, and the job fails loudly rather than publishing a lie.
           for name in \
-              "OpenReader-${{ github.ref_name }}-windows-x86_64-setup.exe" \
-              "OpenReader-${{ github.ref_name }}-windows-x86_64.exe" \
-              "OpenReader-${{ github.ref_name }}-macos-arm64.zip" \
-              "OpenReader-${{ github.ref_name }}-linux-x86_64"; do
+              "Lectern-${{ github.ref_name }}-windows-x86_64-setup.exe" \
+              "Lectern-${{ github.ref_name }}-windows-x86_64.exe" \
+              "Lectern-${{ github.ref_name }}-macos-arm64.zip" \
+              "Lectern-${{ github.ref_name }}-linux-x86_64"; do
             if [ ! -s "release/$name" ]; then
               echo "::error::Release-Datei fehlt oder ist leer: $name"
               exit 1
@@ -278,10 +305,10 @@ jobs:
 
             | Plattform | Datei |
             |---|---|
-            | Windows 10/11 (x64), Installer | `OpenReader-${{ github.ref_name }}-windows-x86_64-setup.exe` |
-            | Windows 10/11 (x64), portabel | `OpenReader-${{ github.ref_name }}-windows-x86_64.exe` |
-            | macOS (Apple Silicon) | `OpenReader-${{ github.ref_name }}-macos-arm64.zip` |
-            | Linux (x64, glibc ≥ 2.35) | `OpenReader-${{ github.ref_name }}-linux-x86_64` |
+            | Windows 10/11 (x64), Installer | `Lectern-${{ github.ref_name }}-windows-x86_64-setup.exe` |
+            | Windows 10/11 (x64), portabel | `Lectern-${{ github.ref_name }}-windows-x86_64.exe` |
+            | macOS (Apple Silicon) | `Lectern-${{ github.ref_name }}-macos-arm64.zip` |
+            | Linux (x64, glibc ≥ 2.35) | `Lectern-${{ github.ref_name }}-linux-x86_64` |
 
             Prüfsummen stehen in `SHA256SUMS.txt`, die Änderungen in
             [CHANGELOG.md](CHANGELOG.md).
@@ -293,6 +320,6 @@ jobs:
 
             **macOS:** Das Bundle ist nicht signiert. Beim ersten Start
             Rechtsklick → „Öffnen“, oder einmalig
-            `xattr -dr com.apple.quarantine OpenReader.app`.
+            `xattr -dr com.apple.quarantine Lectern.app`.
 
             **Linux:** `chmod +x` nicht vergessen.

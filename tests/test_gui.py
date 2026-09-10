@@ -24,9 +24,9 @@ def samples():
 
 @pytest.fixture
 def window(app, tmp_path):
-    from openreader.storage.db import Library
-    from openreader.storage.settings import Settings
-    from openreader.ui.main_window import MainWindow
+    from lectern.storage.db import Library
+    from lectern.storage.settings import Settings
+    from lectern.ui.main_window import MainWindow
 
     settings = Settings(str(tmp_path / "settings.json"))
     library = Library(str(tmp_path / "library.sqlite3"))

@@ -21,7 +21,7 @@ from .i18n import tr
 #: Component, the licence it is used under, and the file holding that licence.
 #: The application comes first; everything after it is somebody else's work.
 COMPONENTS: tuple[tuple[str, str, str], ...] = (
-    ("OpenReader", "GNU General Public License v3.0 or later", "GPL-3.0.txt"),
+    ("Lectern", "GNU General Public License v3.0 or later", "GPL-3.0.txt"),
     ("Qt 6, PySide6, Shiboken6", "GNU Lesser General Public License v3.0",
      "LGPL-3.0.txt"),
 )
@@ -52,7 +52,7 @@ def licences_dir() -> str:
 
     if getattr(sys, "frozen", False):
         base = getattr(sys, "_MEIPASS", os.path.dirname(sys.executable))
-        return os.path.join(base, "openreader", "resources", "licenses")
+        return os.path.join(base, "lectern", "resources", "licenses")
     return os.path.join(_PACKAGE, "resources", "licenses")
 
 

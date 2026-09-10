@@ -95,23 +95,23 @@ def main() -> int:
     parser.add_argument("--cache-mb", type=int, default=0,
                         help="Bildcache-Budget überschreiben (0 = Vorgabe)")
     options = parser.parse_args()
-    os.environ["OPENREADER_DATA_DIR"] = tempfile.mkdtemp(prefix="openreader-bench-")
+    os.environ["LECTERN_DATA_DIR"] = tempfile.mkdtemp(prefix="lectern-bench-")
 
     from PySide6.QtCore import QPoint, QPointF, Qt
     from PySide6.QtGui import QWheelEvent
     from PySide6.QtWidgets import QApplication
 
-    from openreader.storage.db import Library
-    from openreader.storage.settings import Settings
-    from openreader.ui import reader_view
-    from openreader.ui.main_window import MainWindow
+    from lectern.storage.db import Library
+    from lectern.storage.settings import Settings
+    from lectern.ui import reader_view
+    from lectern.ui.main_window import MainWindow
 
     book_path = options.book
     if not book_path:
         from tests.make_heavy_book import build_illustrated, build_plain
 
         book_path = os.path.join(tempfile.gettempdir(),
-                                 "openreader-bench-%s.epub" % options.kind)
+                                 "lectern-bench-%s.epub" % options.kind)
         if not os.path.exists(book_path):
             builder = build_illustrated if options.kind == "illustrated" else build_plain
             builder(book_path)

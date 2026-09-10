@@ -1,4 +1,4 @@
-from openreader.render.html_clean import anchor_name, normalize, strip_tags
+from lectern.render.html_clean import anchor_name, normalize, strip_tags
 
 SRC = """<html><head><title>Kap 1</title><style>p{color:red}</style></head><body>
 <section id="s1"><h1>Titel</h1><p style="display:none">geheim</p>

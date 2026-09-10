@@ -2,9 +2,9 @@
 
 import pytest
 
-from openreader import formats
-from openreader.formats import comic, fb2, pdf, plaintext
-from openreader.formats.base import BookKind, LoadError
+from lectern import formats
+from lectern.formats import comic, fb2, pdf, plaintext
+from lectern.formats.base import BookKind, LoadError
 
 from . import make_samples
 
@@ -201,7 +201,7 @@ def test_pdf_rejects_non_pdf(tmp_path):
 
 
 def test_file_id_is_stable_and_distinct(samples, tmp_path):
-    from openreader.formats.base import file_id
+    from lectern.formats.base import file_id
 
     first = file_id(samples["epub3"])
     copy = tmp_path / "verschoben.epub"

@@ -20,14 +20,14 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 def run(out_dir: str, visible: bool) -> int:
     if not visible:
         os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-    data_dir = tempfile.mkdtemp(prefix="openreader-smoke-")
-    os.environ["OPENREADER_DATA_DIR"] = data_dir
+    data_dir = tempfile.mkdtemp(prefix="lectern-smoke-")
+    os.environ["LECTERN_DATA_DIR"] = data_dir
 
     from PySide6.QtWidgets import QApplication
 
-    from openreader.storage.db import Library
-    from openreader.storage.settings import Settings
-    from openreader.ui.main_window import MainWindow
+    from lectern.storage.db import Library
+    from lectern.storage.settings import Settings
+    from lectern.ui.main_window import MainWindow
     from tests import make_samples
 
     os.makedirs(out_dir, exist_ok=True)

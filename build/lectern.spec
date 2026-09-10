@@ -1,12 +1,12 @@
 # -*- mode: python ; coding: utf-8 -*-
-"""PyInstaller build for a self-contained OpenReader executable.
+"""PyInstaller build for a self-contained Lectern executable.
 
 The point of this file is what it *excludes*.  A default PySide6 bundle drags in
 QtWebEngine, Qt3D, QtQuick, the SQL drivers and every translation, which turns a
-90 MB reader into a 400 MB download.  OpenReader uses Qt Widgets, Qt PDF and
+90 MB reader into a 400 MB download.  Lectern uses Qt Widgets, Qt PDF and
 nothing else, so everything else is dropped explicitly.
 
-    pyinstaller build/openreader.spec --noconfirm
+    pyinstaller build/lectern.spec --noconfirm
 """
 
 import os
@@ -88,11 +88,11 @@ def _translations():
     """
 
     entries = []
-    own = os.path.join(ROOT, "openreader", "resources", "i18n")
+    own = os.path.join(ROOT, "lectern", "resources", "i18n")
     if os.path.isdir(own):
         for name in sorted(os.listdir(own)):
             if name.endswith(".qm"):
-                entries.append((os.path.join("openreader", "resources", "i18n", name),
+                entries.append((os.path.join("lectern", "resources", "i18n", name),
                                 os.path.join(own, name), "DATA"))
 
     try:
@@ -104,7 +104,7 @@ def _translations():
     for name in ("qtbase_de.qm",):
         source = os.path.join(qt_translations, name)
         if os.path.exists(source):
-            entries.append((os.path.join("openreader", "resources", "i18n", name),
+            entries.append((os.path.join("lectern", "resources", "i18n", name),
                             source, "DATA"))
     return entries
 
@@ -125,7 +125,7 @@ def _licences():
                           os.path.join(ROOT, "licenses", "LGPL-3.0.txt"))):
         if not os.path.exists(source):
             raise SystemExit("Lizenztext fehlt: %s" % source)
-        entries.append((os.path.join("openreader", "resources", "licenses", name),
+        entries.append((os.path.join("lectern", "resources", "licenses", name),
                         source, "DATA"))
     return entries
 
@@ -144,11 +144,11 @@ elif sys.platform == "darwin" and os.path.exists(os.path.join(ROOT, "build", "ic
 #: portable — copy it to a stick and it runs — but it unpacks itself into a
 #: temporary directory on every launch.  An installed copy has no such
 #: constraint and should not pay that cost, so the installer build sets
-#: ``OPENREADER_ONEDIR=1``.
-ONEDIR = os.environ.get("OPENREADER_ONEDIR") == "1"
+#: ``LECTERN_ONEDIR=1``.
+ONEDIR = os.environ.get("LECTERN_ONEDIR") == "1"
 
 COMMON = dict(
-    name="OpenReader",
+    name="Lectern",
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
@@ -171,7 +171,7 @@ if ONEDIR:
         analysis.datas,
         strip=False,
         upx=False,
-        name="OpenReader",
+        name="Lectern",
     )
 else:
     executable = EXE(
@@ -187,12 +187,12 @@ else:
 if sys.platform == "darwin":
     app = BUNDLE(
         executable,
-        name="OpenReader.app",
+        name="Lectern.app",
         icon=ICON,
-        bundle_identifier="org.openreader.app",
+        bundle_identifier="org.lectern.app",
         info_plist={
-            "CFBundleName": "OpenReader",
-            "CFBundleDisplayName": "OpenReader",
+            "CFBundleName": "Lectern",
+            "CFBundleDisplayName": "Lectern",
             "NSHighResolutionCapable": True,
             "LSMinimumSystemVersion": "12.0",
             "CFBundleDocumentTypes": [

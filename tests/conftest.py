@@ -38,7 +38,7 @@ def app(tmp_path_factory):
     from PySide6.QtWidgets import QApplication
 
     os.environ.setdefault(
-        "OPENREADER_DATA_DIR", str(tmp_path_factory.mktemp("openreader-data"))
+        "LECTERN_DATA_DIR", str(tmp_path_factory.mktemp("lectern-data"))
     )
     if _APPLICATION is None:
         _APPLICATION = QApplication.instance() or QApplication([])

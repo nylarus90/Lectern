@@ -60,11 +60,33 @@ jobs:
 
       - name: Tests (Linux, unter Xvfb)
         if: runner.os == 'Linux'
-        run: xvfb-run -a --server-args="-screen 0 1280x1024x24" python -m pytest -v
+        run: xvfb-run -a --server-args="-screen 0 1280x1024x24" python -m pytest -v --junitxml=test-report.xml
 
       - name: Tests (Windows/macOS)
         if: runner.os != 'Linux'
-        run: python -m pytest -v
+        run: python -m pytest -v --junitxml=test-report.xml
+
+      # Job logs are only visible when signed in to GitHub; annotations are
+      # public and readable through the API. Without this, a failure on a
+      # runner nobody can reproduce locally -- windows-11-arm -- says only
+      # "exit code 1".
+      - name: Fehlschläge als Anmerkungen
+        if: failure()
+        shell: python
+        run: |
+          import pathlib, xml.etree.ElementTree as ET
+          report = pathlib.Path("test-report.xml")
+          if not report.exists():
+              print("::error title=Tests::no test report - the run died before pytest finished")
+              raise SystemExit(0)
+          def escape(text):
+              return text.replace("%", "%25").replace("\r", "").replace("\n", "%0A")
+          for case in ET.parse(report).getroot().iter("testcase"):
+              for problem in case.findall("failure") + case.findall("error"):
+                  name = (case.get("classname", "") + "." + case.get("name", "")).strip(".")
+                  text = (problem.get("message") or "") + "\n" + (problem.text or "")
+                  tail = "\n".join(text.strip().splitlines()[-40:])
+                  print("::error title=%s::%s" % (name.replace(",", ";").replace("::", ":"), escape(tail)))
 
   build:
     name: Binary (${{ matrix.os }})

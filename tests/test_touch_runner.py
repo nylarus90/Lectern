@@ -39,7 +39,11 @@ def test_touch_tests_pass_offscreen(tmp_path):
         cwd=ROOT, env=environment, capture_output=True, text=True,
         encoding="utf-8", errors="replace", timeout=900, check=False,
     )
+    # The names first: a CI annotation keeps only the end of a long message,
+    # and the names are what says where to look.
+    failed = [line for line in result.stdout.splitlines()
+              if line.startswith(("FAILED", "ERROR"))]
     assert result.returncode == 0, (
-        "touch tests failed in the offscreen process:\n"
-        + result.stdout[-6000:] + "\n" + result.stderr[-2000:]
+        "touch tests failed in the offscreen process:\n" + "\n".join(failed)
+        + "\n\n" + result.stdout[-6000:] + "\n" + result.stderr[-2000:]
     )

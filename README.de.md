@@ -87,7 +87,7 @@ Wer die Datei prüfen möchte, vergleicht sie mit `SHA256SUMS.txt` aus demselben
 Release:
 
 ```powershell
-Get-FileHash .\Lectern-v1.2.0-windows-x86_64-setup.exe -Algorithm SHA256
+Get-FileHash .\Lectern-v1.3.0-windows-x86_64-setup.exe -Algorithm SHA256
 ```
 
 ### Installer oder portabel?
@@ -133,7 +133,7 @@ zugewiesen, bleibt diese Zuweisung bestehen.
 Für unbeaufsichtigte Installationen:
 
 ```bat
-Lectern-v1.2.0-windows-x86_64-setup.exe /VERYSILENT /ASSOC=.epub,.cbz
+Lectern-v1.3.0-windows-x86_64-setup.exe /VERYSILENT /ASSOC=.epub,.cbz
 ```
 
 `/ASSOC=` versteht `none`, `all`, `suggested`, `previous` oder eine Liste von

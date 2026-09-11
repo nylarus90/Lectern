@@ -4,7 +4,7 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## Unreleased
+## 1.3.0 — 2026-09-11
 
 ### Added
 
@@ -19,6 +19,7 @@ All notable changes to this project are documented here. The format follows
 - Touch mode enlarges the toolbar and the list rows and adds a full-screen
   button, since a tablet has neither F11 nor Esc. It follows the presence of a
   touch screen by default and can be fixed on or off in the settings.
+- Touch gestures and their thresholds were verified on real touch hardware.
 - **Windows on ARM64**, native, as a portable file and as an installer. Built,
   tested and silently installed on GitHub's `windows-11-arm` runner.
 
@@ -31,9 +32,6 @@ All notable changes to this project are documented here. The format follows
 
 ### Known limitations
 
-- The gesture thresholds — how long a long press, how far a swipe — were set
-  against simulated touch input. How they feel on glass still has to be tuned
-  on a real device.
 - Nobody on the project owns a Windows-on-ARM machine. The ARM64 build passes
   the full test suite on GitHub's ARM runner and installs there, but it has not
   been used for reading.

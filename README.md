@@ -85,7 +85,7 @@ To check the download, compare it against `SHA256SUMS.txt` from the same
 release:
 
 ```powershell
-Get-FileHash .\Lectern-v1.2.0-windows-x86_64-setup.exe -Algorithm SHA256
+Get-FileHash .\Lectern-v1.3.0-windows-x86_64-setup.exe -Algorithm SHA256
 ```
 
 ### Installer or portable?
@@ -128,7 +128,7 @@ pointed a file type at another program, that choice survives.
 For unattended installs:
 
 ```bat
-Lectern-v1.2.0-windows-x86_64-setup.exe /VERYSILENT /ASSOC=.epub,.cbz
+Lectern-v1.3.0-windows-x86_64-setup.exe /VERYSILENT /ASSOC=.epub,.cbz
 ```
 
 `/ASSOC=` accepts `none`, `all`, `suggested`, `previous` or a list of

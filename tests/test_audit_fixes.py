@@ -252,6 +252,7 @@ class TestSettingsAreClamped:
         ("font_size", -5, 6),
         ("page_margin", -50, 0),
         ("line_height", 99, 4.0),
+        ("comic_zoom", 99, 8.0),
         ("pdf_zoom", 0, 0.05),
         ("theme", "neon", "light"),
         ("comic_fit", "bogus", "width"),

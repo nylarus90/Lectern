@@ -88,32 +88,46 @@ class ComicView(QScrollArea):
         mode = self.settings["comic_fit"]
         available = self.viewport().size()
         if mode == "original" or available.width() < 10:
-            scaled = image
+            base = image.size()
         elif mode == "width":
-            scaled = image.scaledToWidth(available.width(), Qt.SmoothTransformation)
+            base = QSize(available.width(),
+                         round(image.height() * available.width() / image.width()))
         elif mode == "height":
-            scaled = image.scaledToHeight(available.height(), Qt.SmoothTransformation)
+            base = QSize(round(image.width() * available.height() / image.height()),
+                         available.height())
         else:
-            scaled = image.scaled(available, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            base = image.size().scaled(available, Qt.KeepAspectRatio)
+        zoom = float(self.settings["comic_zoom"])
+        target = QSize(max(1, round(base.width() * zoom)),
+                       max(1, round(base.height() * zoom)))
+        scaled = image.scaled(target, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         self._label.setPixmap(QPixmap.fromImage(scaled))
-        self._label.setMinimumSize(QSize(1, 1))
+        # The minimum size is what makes QScrollArea expose scroll bars when a
+        # zoomed comic is larger than the viewport. Merely resizing a widget
+        # managed by a resizable scroll area is immediately undone by Qt.
+        self._label.setMinimumSize(scaled.size())
         self._label.resize(scaled.size())
 
     def set_fit_mode(self, mode: str) -> None:
         self.settings["comic_fit"] = mode
+        self.settings["comic_zoom"] = 1.0
         self.show_page(self._index)
 
-    #: What a pinch steps through, from the whole page to full detail.
-    ZOOM_ORDER = ("page", "width", "original")
+    def zoom_by(self, factor: float) -> None:
+        """Scale a comic continuously, for both keys and pinch gestures."""
 
-    def zoom_step(self, direction: int) -> None:
-        """Pinching out shows more detail, pinching in more of the page."""
+        before = float(self.settings["comic_zoom"])
+        self.settings["comic_zoom"] = before * factor
+        if float(self.settings["comic_zoom"]) != before:
+            image = self._cache.get(self._index)
+            if image is not None:
+                self._render(image)
 
-        current = self.settings["comic_fit"]
-        index = self.ZOOM_ORDER.index(current) if current in self.ZOOM_ORDER else 1
-        index = max(0, min(len(self.ZOOM_ORDER) - 1, index + direction))
-        if self.ZOOM_ORDER[index] != current:
-            self.set_fit_mode(self.ZOOM_ORDER[index])
+    def reset_zoom(self) -> None:
+        self.settings["comic_zoom"] = 1.0
+        image = self._cache.get(self._index)
+        if image is not None:
+            self._render(image)
 
     def resizeEvent(self, event) -> None:  # noqa: N802 - Qt naming
         super().resizeEvent(event)

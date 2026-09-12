@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Fixed
+
+- Zoom commands and pinch gestures now actually scale CBZ/comic pages instead
+  of changing the hidden text reader's font or merely switching fit modes.
+
 ## 1.3.0 — 2026-09-11
 
 ### Added

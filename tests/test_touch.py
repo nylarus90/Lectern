@@ -326,6 +326,14 @@ def test_pinching_zooms_a_pdf(app, window, device, samples):
     assert window.pdf.zoomFactor() > before
 
 
+def test_pinching_zooms_a_comic(app, window, device, samples):
+    _open(app, window, samples["cbz"])
+    viewport = window.comic.viewport()
+    before = window.comic._label.pixmap().width()
+    pinch(app, device, viewport, _point(viewport.width() / 2, viewport.height() / 2), 100, 260)
+    assert window.comic._label.pixmap().width() > before
+
+
 # -- long press -------------------------------------------------------------
 def test_long_press_selects_a_word_and_offers_the_menu(app, window, device, long_text):
     long_text.set_text_position(300)

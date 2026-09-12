@@ -231,6 +231,23 @@ def test_comic_pages(app, window, samples):
     assert window.comic.current_page == 3
 
 
+def test_comic_zoom_commands_scale_the_page(app, window, samples):
+    _open(app, window, samples["cbz"])
+    before = window.comic._label.pixmap().size()
+    font_size = window.settings["font_size"]
+
+    window.zoom_in()
+    _spin(app)
+    assert window.comic._label.pixmap().width() > before.width()
+    assert window.settings["font_size"] == font_size
+    assert window.comic.horizontalScrollBar().maximum() > 0
+
+    window.zoom_reset()
+    _spin(app)
+    assert window.settings["comic_zoom"] == 1.0
+    assert window.comic._label.pixmap().size() == before
+
+
 def test_broken_file_reports_instead_of_crashing(app, window, tmp_path, monkeypatch):
     from PySide6.QtWidgets import QMessageBox
 

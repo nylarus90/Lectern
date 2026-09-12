@@ -28,6 +28,7 @@ DEFAULTS: dict[str, Any] = {
     "sidebar_visible": True,
     "recent_limit": 20,
     "comic_fit": "width",          # width | height | page | original
+    "comic_zoom": 1.0,
     "pdf_zoom_mode": "width",      # width | page | custom
     "pdf_zoom": 1.0,
     "touch_mode": "auto",          # auto | on | off
@@ -47,6 +48,7 @@ RANGES: dict[str, tuple[float, float]] = {
     "text_width": (0, 200),
     "paragraph_spacing": (0.0, 4.0),
     "recent_limit": (1, 200),
+    "comic_zoom": (0.1, 8.0),
     "pdf_zoom": (0.05, 16.0),
 }
 

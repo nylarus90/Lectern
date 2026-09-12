@@ -838,6 +838,9 @@ class MainWindow(QMainWindow):
         if self.active_view is self.pdf:
             self.pdf.set_zoom_mode("width")
             self.statusBar().showMessage(tr("Zoom: fit to width"), 1800)
+        elif self.active_view is self.comic:
+            self.comic.reset_zoom()
+            self.statusBar().showMessage(tr("Zoom: %d %%") % 100, 1800)
         else:
             self.set_font_size(DEFAULTS["font_size"])
 
@@ -845,14 +848,18 @@ class MainWindow(QMainWindow):
         """Route the zoom keys to whatever is actually on screen.
 
         In a PDF the page is a fixed layout, so changing the reading font does
-        nothing visible — Ctrl+Plus appeared broken.  The same keys now scale
-        the page there and the type everywhere else.
+        nothing visible — Ctrl+Plus appeared broken. The same keys now scale
+        fixed-layout PDF and comic pages, and change the type in text books.
         """
 
         if self.active_view is self.pdf:
             self.pdf.zoom_by(1.25 if direction > 0 else 1 / 1.25)
             self.statusBar().showMessage(
                 tr("Zoom: %d %%") % round(self.pdf.zoomFactor() * 100), 1800)
+        elif self.active_view is self.comic:
+            self.comic.zoom_by(1.25 if direction > 0 else 1 / 1.25)
+            self.statusBar().showMessage(
+                tr("Zoom: %d %%") % round(float(self.settings["comic_zoom"]) * 100), 1800)
         else:
             self.change_font_size(direction)
 
@@ -903,8 +910,7 @@ class MainWindow(QMainWindow):
         self.touch_text.pinched.connect(
             lambda factor: self.change_font_size(1 if factor > 1 else -1))
         self.touch_pdf.pinched.connect(self.pdf.zoom_by)
-        self.touch_comic.pinched.connect(
-            lambda factor: self.comic.zoom_step(1 if factor > 1 else -1))
+        self.touch_comic.pinched.connect(self.comic.zoom_by)
 
         self._long_press_menus = [
             LongPressMenu(view) for view in (self.welcome.list, self.bookmark_panel.list,

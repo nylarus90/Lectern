@@ -5,7 +5,7 @@ from __future__ import annotations
 import bisect
 import os
 
-from PySide6.QtCore import QByteArray, QPoint, QSize, Qt, QTimer, QUrl, Signal
+from PySide6.QtCore import QByteArray, QEvent, QPoint, QSize, Qt, QTimer, QUrl, Signal
 from PySide6.QtGui import QAction, QActionGroup, QDesktopServices, QKeySequence
 from PySide6.QtWidgets import (
     QApplication,
@@ -113,6 +113,8 @@ class MainWindow(QMainWindow):
 
         for widget in (self.welcome, self.reader, self.comic, self.pdf):
             self.stack.addWidget(widget)
+        for view in (self.reader, self.comic, self.pdf):
+            view.viewport().installEventFilter(self)
         self.setCentralWidget(self.stack)
         self.stack.setCurrentWidget(self.welcome)
 
@@ -833,6 +835,20 @@ class MainWindow(QMainWindow):
 
     def zoom_out(self) -> None:
         self._zoom(-1)
+
+    def eventFilter(self, watched, event) -> bool:  # noqa: N802 - Qt naming
+        """Turn Ctrl+wheel into zoom before a document view scrolls it."""
+
+        if (event.type() == QEvent.Wheel
+                and watched in (self.reader.viewport(), self.comic.viewport(),
+                                self.pdf.viewport())
+                and event.modifiers() & Qt.ControlModifier):
+            delta = event.angleDelta().y() or event.pixelDelta().y()
+            if delta:
+                self._zoom(1 if delta > 0 else -1)
+            event.accept()
+            return True
+        return super().eventFilter(watched, event)
 
     def zoom_reset(self) -> None:
         if self.active_view is self.pdf:

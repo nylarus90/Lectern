@@ -248,6 +248,25 @@ def test_comic_zoom_commands_scale_the_page(app, window, samples):
     assert window.comic._label.pixmap().size() == before
 
 
+def test_ctrl_wheel_zooms_the_active_view(app, window, samples):
+    from PySide6.QtCore import QPoint, QPointF, Qt
+    from PySide6.QtGui import QWheelEvent
+
+    _open(app, window, samples["cbz"])
+    viewport = window.comic.viewport()
+    before = window.comic._label.pixmap().width()
+    event = QWheelEvent(
+        QPointF(20, 20), QPointF(viewport.mapToGlobal(QPoint(20, 20))),
+        QPoint(), QPoint(0, 120), Qt.NoButton, Qt.ControlModifier,
+        Qt.NoScrollPhase, False,
+    )
+
+    app.sendEvent(viewport, event)
+    _spin(app)
+    assert event.isAccepted()
+    assert window.comic._label.pixmap().width() > before
+
+
 def test_broken_file_reports_instead_of_crashing(app, window, tmp_path, monkeypatch):
     from PySide6.QtWidgets import QMessageBox
 

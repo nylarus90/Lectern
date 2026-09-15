@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Fixed
+
+- Ctrl+mouse wheel now zooms the active text, PDF or comic view instead of
+  being swallowed by the view as an ordinary scroll event.
+
 ## 1.3.1 — 2026-09-12
 
 ### Fixed

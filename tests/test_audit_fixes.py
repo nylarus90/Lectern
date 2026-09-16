@@ -254,6 +254,7 @@ class TestSettingsAreClamped:
         ("line_height", 99, 4.0),
         ("comic_zoom", 99, 8.0),
         ("pdf_zoom", 0, 0.05),
+        ("last_update_check", -1, 0),
         ("theme", "neon", "light"),
         ("comic_fit", "bogus", "width"),
     ])

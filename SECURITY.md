@@ -61,9 +61,12 @@ file and hopes it is opened. That is the case this project takes seriously.
 
 Documented here so a report can tell a gap from a deliberate decision:
 
-- No network code at all. Qt's network and WebEngine modules are excluded from
-  the build, so the guarantee is structural rather than a promise. The only
-  outbound path is opening a link in your browser, and that asks first.
+- The only built-in network request is the optional update check: when run
+  manually or explicitly enabled for a daily check, it fetches public release
+  metadata from GitHub over HTTPS. It sends no book, library or usage data and
+  never downloads or executes a release. Opening a book link or an available
+  release in the browser asks first. Qt's network and WebEngine modules remain
+  excluded from the build.
 - No `eval`, no `pickle`, no shelling out except to an archive extractor, which
   is launched by absolute path with `--` separators and whose output is
   verified to stay inside a temporary directory.

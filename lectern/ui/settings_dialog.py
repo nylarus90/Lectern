@@ -168,6 +168,17 @@ class SettingsDialog(QDialog):
         )
         form.addRow(tr("Touch operation"), self.touch_box)
 
+        self.update_box = QCheckBox(tr("Automatically check for updates"), page)
+        self.update_box.setChecked(bool(self.settings["automatic_update_check"]))
+        self.update_box.setToolTip(
+            tr("Once a day, contact GitHub to check whether a newer Lectern release exists.\n"
+               "No book or library data is sent.")
+        )
+        self.update_box.toggled.connect(
+            lambda on: self._set("automatic_update_check", on)
+        )
+        form.addRow(tr("Updates"), self.update_box)
+
         self.language_box = QComboBox(page)
         for code, _label in i18n.LANGUAGES:
             self.language_box.addItem(i18n.language_label(code), code)
@@ -239,6 +250,7 @@ class SettingsDialog(QDialog):
         self.publisher_box.setChecked(DEFAULTS["use_publisher_css"])
         self.theme_box.setCurrentIndex(max(0, self.theme_box.findData(DEFAULTS["theme"])))
         self.touch_box.setCurrentIndex(max(0, self.touch_box.findData(DEFAULTS["touch_mode"])))
+        self.update_box.setChecked(DEFAULTS["automatic_update_check"])
         # The font box was left showing the old family while the setting behind
         # it had already been reset, so dialog and state disagreed.
         self.font_box.blockSignals(True)

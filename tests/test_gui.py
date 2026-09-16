@@ -66,6 +66,29 @@ def test_window_starts_on_the_welcome_screen(window):
     assert window.book is None
 
 
+def test_automatic_update_checks_are_opt_in(window, monkeypatch):
+    calls = []
+    monkeypatch.setattr(window.update_checker, "start",
+                        lambda *, manual: calls.append(manual) or True)
+
+    window._maybe_check_updates()
+    assert calls == []
+    window.settings["automatic_update_check"] = True
+    window.settings["last_update_check"] = 0
+    window._maybe_check_updates()
+    assert calls == [False]
+
+
+def test_manual_update_check_works_while_automatic_checks_are_off(window, monkeypatch):
+    calls = []
+    monkeypatch.setattr(window.update_checker, "start",
+                        lambda *, manual: calls.append(manual) or True)
+    window.settings["automatic_update_check"] = False
+
+    window.check_for_updates()
+    assert calls == [True]
+
+
 @pytest.mark.parametrize("key,view", [
     ("epub3", "reader"), ("mobi", "reader"), ("azw3", "reader"), ("fb2", "reader"),
     ("txt", "reader"), ("md", "reader"), ("rtf", "reader"), ("html", "reader"),

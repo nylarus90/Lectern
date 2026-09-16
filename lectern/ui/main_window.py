@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import bisect
 import os
+import time
 
 from PySide6.QtCore import QByteArray, QEvent, QPoint, QSize, Qt, QTimer, QUrl, Signal
 from PySide6.QtGui import QAction, QActionGroup, QDesktopServices, QKeySequence
@@ -32,6 +33,7 @@ from ..i18n import tr
 from ..render import theme as theming
 from ..storage.db import Library
 from ..storage.settings import DEFAULTS, Settings
+from ..update import CHECK_INTERVAL_SECONDS, UpdateChecker, UpdateInfo
 from ..version import APP_NAME, __version__
 from .comic_view import ComicView
 from .licences_dialog import LicencesDialog
@@ -75,6 +77,10 @@ class MainWindow(QMainWindow):
         self._build_statusbar()
         self._build_touch()
 
+        self.update_checker = UpdateChecker(self)
+        self.update_checker.checked.connect(self._on_update_checked)
+        self.update_checker.failed.connect(self._on_update_failed)
+
         self.loader = BookLoader(self)
         self.loader.progress.connect(self._on_load_progress)
         self.loader.finished.connect(self._on_load_finished)
@@ -88,6 +94,7 @@ class MainWindow(QMainWindow):
         self.apply_touch_mode()
         self._restore_window_state()
         self._update_actions()
+        QTimer.singleShot(1500, self._maybe_check_updates)
 
     # ------------------------------------------------------------------
     # Construction
@@ -258,6 +265,8 @@ class MainWindow(QMainWindow):
         help_menu = menubar.addMenu(tr("&Help"))
         help_menu.addAction(_action(self, tr("Keyboard shortcuts"), QKeySequence.HelpContents,
                                     self.show_shortcuts))
+        help_menu.addAction(_action(self, tr("Check for updates…"), None,
+                                    self.check_for_updates))
         help_menu.addAction(_action(self, tr("Licences…"), None, self.show_licences))
         help_menu.addAction(_action(self, tr("About %s") % APP_NAME, None, self.show_about))
 
@@ -1008,6 +1017,7 @@ class MainWindow(QMainWindow):
         self.reader.restyle()
         if self.active_view is self.comic:
             self.comic.set_fit_mode(self.settings["comic_fit"])
+        self._maybe_check_updates()
 
     # ------------------------------------------------------------------
     # Misc
@@ -1057,6 +1067,57 @@ class MainWindow(QMainWindow):
 
     def show_licences(self) -> None:
         LicencesDialog(self).exec()
+
+    def check_for_updates(self) -> None:
+        """Check now, regardless of the automatic-update preference."""
+
+        if self.update_checker.start(manual=True):
+            self.statusBar().showMessage(tr("Checking for updates…"), 3000)
+        else:
+            self.statusBar().showMessage(tr("An update check is already running."), 3000)
+
+    def _maybe_check_updates(self) -> None:
+        if not self.settings["automatic_update_check"]:
+            return
+        elapsed = time.time() - int(self.settings["last_update_check"])
+        if elapsed >= CHECK_INTERVAL_SECONDS:
+            self.update_checker.start(manual=False)
+
+    def _record_update_attempt(self) -> None:
+        self.settings["last_update_check"] = int(time.time())
+        self.settings.save()
+
+    def _on_update_checked(self, info: UpdateInfo | None, manual: bool) -> None:
+        self._record_update_attempt()
+        if info is None:
+            if manual:
+                QMessageBox.information(
+                    self, tr("No update available"),
+                    tr("You are using the latest version of %s.") % APP_NAME,
+                )
+            return
+
+        box = QMessageBox(self)
+        box.setIcon(QMessageBox.Information)
+        box.setTextFormat(Qt.PlainText)
+        box.setWindowTitle(tr("Update available"))
+        box.setText(
+            tr("%s %s is available. You are using version %s.\n\n"
+               "Open the official GitHub release page?")
+            % (APP_NAME, info.version, __version__)
+        )
+        box.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        box.setDefaultButton(QMessageBox.Yes)
+        if box.exec() == QMessageBox.Yes:
+            QDesktopServices.openUrl(QUrl(info.page_url))
+
+    def _on_update_failed(self, message: str, manual: bool) -> None:
+        self._record_update_attempt()
+        if manual:
+            QMessageBox.warning(
+                self, tr("Update check failed"),
+                tr("Lectern could not check for updates.\n\n%s") % message,
+            )
 
     def show_about(self) -> None:
         QMessageBox.about(
@@ -1115,6 +1176,7 @@ class MainWindow(QMainWindow):
         self.settings.save()
         # Waiting is right at exit and wrong anywhere else: a worker thread that
         # outlives the interpreter is worse than a brief pause here.
+        self.update_checker.shutdown()
         self.loader.shutdown()
         super().closeEvent(event)
 

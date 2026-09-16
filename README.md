@@ -274,9 +274,13 @@ height afterwards — and are centred while we are at it.
 
 ### What is stored, and where
 
-Lectern sends nothing over the network. Stored locally are the file path,
-title, author, time of opening, reading position, plus bookmarks, highlights
-and notes — in `library.sqlite3` and `settings.json`:
+Lectern sends no book, library or usage data over the network. The optional
+update check is off by default. When you run it manually or enable the daily
+check under *Settings → Reading*, Lectern makes one HTTPS request to GitHub for
+the latest public release metadata; it does not download or install programs.
+Stored locally are the file path, title, author, time of opening, reading
+position, plus bookmarks, highlights and notes — in `library.sqlite3` and
+`settings.json`:
 
 | Platform | Location |
 |---|---|

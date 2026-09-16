@@ -4,6 +4,15 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Added
+
+- A manual *Help → Check for updates* command and an optional daily background
+  check. Automatic checks are off by default, fetch only public release
+  metadata from GitHub, and offer to open the release page; Lectern never
+  downloads or executes an unsigned update itself.
+
 ## 1.3.2 — 2026-09-15
 
 ### Fixed

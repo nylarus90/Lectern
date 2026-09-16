@@ -32,6 +32,8 @@ DEFAULTS: dict[str, Any] = {
     "pdf_zoom_mode": "width",      # width | page | custom
     "pdf_zoom": 1.0,
     "touch_mode": "auto",          # auto | on | off
+    "automatic_update_check": False,
+    "last_update_check": 0,         # Unix time; successful or failed attempt
 }
 
 #: Presets the view turns into concrete colours.
@@ -50,6 +52,7 @@ RANGES: dict[str, tuple[float, float]] = {
     "recent_limit": (1, 200),
     "comic_zoom": (0.1, 8.0),
     "pdf_zoom": (0.05, 16.0),
+    "last_update_check": (0, 4102444800),
 }
 
 #: Permitted values per enumerated setting.

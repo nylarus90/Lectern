@@ -283,9 +283,13 @@ Zeilenhöhe — und werden gleich mittig gesetzt.
 
 ### Welche Daten wo gespeichert werden
 
-Lectern sendet nichts ins Netz. Lokal gespeichert werden Dateipfad, Titel,
-Autor, Zeitpunkt des Öffnens, Leseposition sowie Lesezeichen, Markierungen und
-Notizen — in `library.sqlite3` und `settings.json`:
+Lectern sendet keine Buch-, Bibliotheks- oder Nutzungsdaten ins Netz. Die
+optionale Updateprüfung ist standardmäßig ausgeschaltet. Wird sie manuell
+gestartet oder unter *Einstellungen → Lesen* täglich aktiviert, fragt Lectern
+einmal per HTTPS die öffentlichen Daten des neuesten GitHub-Releases ab; es
+lädt oder installiert dabei keine Programme. Lokal gespeichert werden
+Dateipfad, Titel, Autor, Zeitpunkt des Öffnens, Leseposition sowie Lesezeichen,
+Markierungen und Notizen — in `library.sqlite3` und `settings.json`:
 
 | Plattform | Ort |
 |---|---|

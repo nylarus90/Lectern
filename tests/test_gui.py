@@ -290,6 +290,33 @@ def test_ctrl_wheel_zooms_the_active_view(app, window, samples):
     assert window.comic._label.pixmap().width() > before
 
 
+def test_plain_wheel_turns_fitted_comic_pages(app, window, samples):
+    from PySide6.QtCore import QPoint, QPointF, Qt
+    from PySide6.QtGui import QWheelEvent
+
+    _open(app, window, samples["cbz"])
+    window.comic.set_fit_mode("page")
+    viewport = window.comic.viewport()
+
+    def wheel(delta):
+        event = QWheelEvent(
+            QPointF(20, 20), QPointF(viewport.mapToGlobal(QPoint(20, 20))),
+            QPoint(), QPoint(0, delta), Qt.NoButton, Qt.NoModifier,
+            Qt.NoScrollPhase, False,
+        )
+        app.sendEvent(viewport, event)
+        _spin(app)
+        return event
+
+    down = wheel(-120)
+    assert down.isAccepted()
+    assert window.comic.current_page == 2
+
+    up = wheel(120)
+    assert up.isAccepted()
+    assert window.comic.current_page == 1
+
+
 def test_broken_file_reports_instead_of_crashing(app, window, tmp_path, monkeypatch):
     from PySide6.QtWidgets import QMessageBox
 

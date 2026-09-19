@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## Unreleased
+
+### Fixed
+
+- An ordinary mouse-wheel turn now moves to the next or previous CBZ/comic
+  page when the current image is fitted or its scroll edge has been reached.
+
 ## 1.4.0 — 2026-09-16
 
 ### Added

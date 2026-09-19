@@ -135,6 +135,32 @@ class ComicView(QScrollArea):
         if image is not None and self.settings["comic_fit"] != "original":
             self._render(image)
 
+    def wheelEvent(self, event) -> None:  # noqa: N802 - Qt naming
+        """Scroll a large image, then turn the comic page at its edge.
+
+        A fitted image has no scrollbar range, so QScrollArea accepts an
+        ordinary wheel event without doing anything.  Treat the page edge as
+        the hand-off point to the neighbouring image.  Ctrl+wheel is left to
+        the main-window filter, which owns zooming for every document view.
+        """
+
+        if event.modifiers() & Qt.ControlModifier:
+            super().wheelEvent(event)
+            return
+
+        delta = event.angleDelta().y() or event.pixelDelta().y()
+        bar = self.verticalScrollBar()
+        if delta < 0 and bar.value() >= bar.maximum() and self._index + 1 < self.page_count:
+            self.show_page(self._index + 1)
+            event.accept()
+            return
+        if delta > 0 and bar.value() <= bar.minimum() and self._index > 0:
+            self.show_page(self._index - 1)
+            self.verticalScrollBar().setValue(self.verticalScrollBar().maximum())
+            event.accept()
+            return
+        super().wheelEvent(event)
+
     # -- navigation -------------------------------------------------------
     def next_page(self) -> None:
         bar = self.verticalScrollBar()

@@ -1,6 +1,6 @@
 """Single source of truth for the application version."""
 
-__version__ = "1.4.0"
+__version__ = "1.4.1"
 
 APP_NAME = "Lectern"
 APP_ID = "lectern"
